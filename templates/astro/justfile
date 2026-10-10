@@ -1,0 +1,14 @@
+default:
+    @just --list
+
+serve-at PORT:
+    wdk serve-dir dist {{PORT}}
+
+build:
+    rm -rf dist
+    bunx astro build
+
+check: build
+    wdk compat
+    wdk smoke
+    wdk a11y

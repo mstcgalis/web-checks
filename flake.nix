@@ -86,6 +86,7 @@
             eleventy = [ ];
             # Vite comes from the project's bun dependencies.
             vite = [ ];
+            astro = [ ];
             # Same attribute as the vps PHP-FPM pool (services.phpfpm.pools.*.phpPackage).
             kirby = [ pkgs.php85 pkgs.php85Packages.composer ];
           };
@@ -102,7 +103,7 @@
           '';
         };
 
-      templates = nixpkgs.lib.genAttrs [ "static" "kirby" "eleventy" "vite" ] (name: {
+      templates = nixpkgs.lib.genAttrs [ "static" "kirby" "eleventy" "vite" "astro" ] (name: {
         path = ./templates/${name};
         description = "web-dev-kit ${name} project";
       });

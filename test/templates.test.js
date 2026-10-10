@@ -22,7 +22,7 @@ function project(name) {
 	return dir;
 }
 
-for (const name of ['static', 'eleventy', 'vite']) {
+for (const name of ['static', 'eleventy', 'vite', 'astro']) {
 	test(`template ${name}: compat, smoke and a11y pass`, () => {
 		const dir = project(name);
 		if (name !== 'static') {
@@ -45,6 +45,6 @@ test('template kirby: has its files and a parseable justfile', async () => {
 
 // templates are copied standalone by `nix flake init`, so the shared rules are duplicated; keep them in sync
 test('AGENTS.md is identical across templates', async () => {
-	const [a, ...rest] = await Promise.all(['static', 'eleventy', 'vite', 'kirby'].map((t) => Bun.file(join(ROOT, 'templates', t, 'AGENTS.md')).text()));
+	const [a, ...rest] = await Promise.all(['static', 'eleventy', 'vite', 'astro', 'kirby'].map((t) => Bun.file(join(ROOT, 'templates', t, 'AGENTS.md')).text()));
 	for (const r of rest) expect(r).toBe(a);
 });
