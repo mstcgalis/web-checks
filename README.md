@@ -86,6 +86,12 @@ Each of these produced confident, wrong numbers once:
 `nix develop`, then `bun install`, then `just check`. After changing `bun.lock`, run `just hash` and
 update `outputHash` in `flake.nix`.
 
+## Branches and releases
+
+Projects: `dev` deploys staging, `main` deploys production; both fast-forward only, conventional
+commits. The wdk itself: work on `web-kit`, fast-forward `main`, tag `vX.Y.Z` from `main` (semver;
+`package.json` is the version source). Projects bump `inputs.wdk` to the tag.
+
 ## Licence
 
 AGPL-3.0.

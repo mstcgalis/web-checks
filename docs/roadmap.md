@@ -18,8 +18,7 @@ modules that already exist.
   it; the stack part goes with the stack adapter.
 - **`docs/` contracts.** Sonda has content, CSS and server contracts. Which are generic (the server
   contract is, through the vps module) and which are per project.
-- **Branch and release model, written down:** `dev` → staging, `main` → production,
-  fast-forward only, conventional commits, semver tags for the wdk itself.
+- ~~**Branch and release model, written down**~~ done (README "Branches and releases").
 - **Fast mode** (sonda's `AGENTS.md`) as a wdk-level convention or a per-project one.
 
 ## 2. Stack adapters
@@ -66,8 +65,7 @@ Missing (this spec only moves sonda's test job to `nix develop -c just check`):
 - **Reusable workflows in the wdk**: `check.yml` (`workflow_call`, `nix develop -c just check`, with Nix
   cache) done and shipped as a caller in each template. Missing: deploy-staging (push to `dev`), deploy-production (push to `main`, after tests pass). Projects
   keep three thin caller files.
-- **Nix caching in CI** (magic-nix-cache or a Cachix cache) so a cold Nix shell does not dominate
-  CI time.
+- ~~**Nix caching in CI**~~ done: `check.yml` uses magic-nix-cache. Cachix only if that proves flaky.
 - **Deploy credentials:** which secret the project CI holds to dispatch to vps, scoped how.
 - **wdk releases:** tag → each project bumps `inputs.wdk`. Whether a bot opens those PRs, like the
   vps weekly flake update.
