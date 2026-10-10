@@ -12,7 +12,7 @@ modules that already exist.
 
 ## 0. Repo contract: what the thin version leaves out
 
-- **Shared agent/human rules** (generic part done: `AGENTS.md` in each template; Kirby-specific part remains; a test keeps the copies identical). Sonda's `AGENTS.md` mixes generic rules (one concern per commit,
+- **Shared agent/human rules** (done: generic `AGENTS.md` in each template, Kirby rules below its `---`; a test keeps the shared part identical). Sonda's `AGENTS.md` mixes generic rules (one concern per commit,
   `just check` before commit, never commit secrets, server-owned state is untouchable, field names
   frozen) with Kirby specifics. Split it: the generic part ships in the wdk and projects point at
   it; the stack part goes with the stack adapter.

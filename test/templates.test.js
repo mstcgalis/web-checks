@@ -44,7 +44,7 @@ test('template kirby: has its files and a parseable justfile', async () => {
 });
 
 // templates are copied standalone by `nix flake init`, so the shared rules are duplicated; keep them in sync
-test('AGENTS.md is identical across templates', async () => {
-	const [a, ...rest] = await Promise.all(['static', 'eleventy', 'vite', 'astro', 'kirby'].map((t) => Bun.file(join(ROOT, 'templates', t, 'AGENTS.md')).text()));
+test('AGENTS.md shared rules (above the ---) are identical across templates', async () => {
+	const [a, ...rest] = (await Promise.all(['static', 'eleventy', 'vite', 'astro', 'kirby'].map((t) => Bun.file(join(ROOT, 'templates', t, 'AGENTS.md')).text()))).map((t) => t.split('\n---\n')[0]);
 	for (const r of rest) expect(r).toBe(a);
 });
