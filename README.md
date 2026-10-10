@@ -6,11 +6,11 @@ shells per stack. Part of a larger system for delivering sites; see [`docs/roadm
 ## New project
 
 ```sh
-nix flake init -t github:mstcgalis/web-dev-kit#static   # or kirby, eleventy
+nix flake init -t github:mstcgalis/web-dev-kit#static   # or kirby, eleventy, vite
 ```
 
 Each template is a flake, a `justfile` (`serve-at`, `build`, `check`), a `wdk.config.js` and a
-starter page. `static` serves `site/`; `eleventy` builds `src/` to `_site/` with Eleventy;
+starter page. `static` serves `site/`; `eleventy` builds `src/` to `_site/` with Eleventy; `vite` builds to `dist/` with Vite;
 `kirby` expects Kirby in `./kirby` (git submodule) and serves it with `php -S`.
 
 ## Use in a project
