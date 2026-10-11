@@ -132,6 +132,7 @@
           nativeBuildInputs = [ pkgs.bun ];
           dontConfigure = true;
           buildPhase = ''
+            set -x # a failure here is otherwise silent in the last-lines log
             export HOME=$TMPDIR
             cp -r ${nodeModules}/node_modules node_modules
             chmod -R u+w node_modules
