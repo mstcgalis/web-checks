@@ -18,7 +18,7 @@ starter page. `static` serves `site/`; `eleventy` builds `src/` to `_site/` with
 ```nix
 # flake.nix
 {
-  inputs.wdk.url = "github:mstcgalis/web-dev-kit/v0.6.4";
+  inputs.wdk.url = "github:mstcgalis/web-dev-kit/v0.7.0";
   inputs.nixpkgs.follows = "wdk/nixpkgs";
   outputs = { wdk, nixpkgs, ... }: {
     devShells = nixpkgs.lib.genAttrs [ "aarch64-darwin" "x86_64-linux" ] (system: {
@@ -93,6 +93,14 @@ token, `NIX_ACCESS_TOKEN`: a fine-grained PAT, Contents read-only, on all reposi
 need no per-repo step. Locally: `access-tokens = github.com=<token>` in `~/.config/nix/nix.conf`. In CI:
 a repo secret of that name (the vps repo needs it; the reusable `check.yml` uses it when set and callers
 pass only that secret). The bootstrap CLI sets it with `gh secret set`.
+
+## Deploys
+
+A site is a flake input of the vps repo. Push to `main`: the site's `deploy.yml` runs `check.yml`, then the
+reusable `deploy.yml` dispatches the vps repo's `site-update.yml`, which bumps that input, builds the
+site, merges the lock bump and dispatches the deploy (Playground canary, then Production). The site repo
+needs two secrets: `NIX_ACCESS_TOKEN` (read) and `VPS_DISPATCH_TOKEN`, a fine-grained PAT with Actions
+read and write on the vps repo only. Kirby sites are stateful and not covered yet.
 
 ## Branches and releases
 

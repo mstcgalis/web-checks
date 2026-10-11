@@ -1,0 +1,24 @@
+# Reusable: a site calls this after its checks pass on main, with
+# `uses: mstcgalis/web-dev-kit/.github/workflows/deploy.yml@vX.Y.Z`. It asks the vps repo to bump
+# the site's flake input and deploy (vps .github/workflows/site-update.yml).
+name: deploy
+on:
+  workflow_call:
+    inputs:
+      # The site's input name in the vps flake; defaults to the repo name.
+      input:
+        type: string
+        default: ""
+    secrets:
+      # Fine-grained PAT, Actions: read and write on the vps repo only.
+      VPS_DISPATCH_TOKEN:
+        required: true
+permissions: {}
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - run: gh workflow run site-update.yml -R mstcgalis/vps --ref main -f input="$INPUT"
+        env:
+          GH_TOKEN: ${{ secrets.VPS_DISPATCH_TOKEN }}
+          INPUT: ${{ inputs.input != '' && inputs.input || github.event.repository.name }}

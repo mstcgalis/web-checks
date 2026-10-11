@@ -1,0 +1,15 @@
+name: deploy
+# Push to main: check, then ask the vps repo to bump this site's input and deploy.
+on:
+  push:
+    branches: [main]
+jobs:
+  check:
+    uses: mstcgalis/web-dev-kit/.github/workflows/check.yml@v0.7.0
+    secrets:
+      NIX_ACCESS_TOKEN: ${{ secrets.NIX_ACCESS_TOKEN }}
+  deploy:
+    needs: check
+    uses: mstcgalis/web-dev-kit/.github/workflows/deploy.yml@v0.7.0
+    secrets:
+      VPS_DISPATCH_TOKEN: ${{ secrets.VPS_DISPATCH_TOKEN }}

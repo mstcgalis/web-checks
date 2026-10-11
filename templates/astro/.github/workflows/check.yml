@@ -1,7 +1,10 @@
 name: check
-on: [push, pull_request]
+on:
+  pull_request:
+  push:
+    branches-ignore: [main] # main is checked by deploy.yml
 jobs:
   check:
-    uses: mstcgalis/web-dev-kit/.github/workflows/check.yml@v0.6.4
+    uses: mstcgalis/web-dev-kit/.github/workflows/check.yml@v0.7.0
     secrets:
       NIX_ACCESS_TOKEN: ${{ secrets.NIX_ACCESS_TOKEN }}

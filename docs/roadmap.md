@@ -62,6 +62,7 @@ Missing:
 
 Missing (this spec only moves sonda's test job to `nix develop -c just check`):
 
+- **Deploy trigger** (done 2026-10-11, untested live): push to `main` -> `deploy.yml` -> vps `site-update.yml` (README "Deploys"). Staging deploys not built.
 - **Reusable workflows in the wdk**: `check.yml` (`workflow_call`, `nix develop -c just check`, with Nix
   cache) done and shipped as a caller in each template. Missing: deploy-staging (push to `staging`), deploy-production (push to `main`, after tests pass). Projects
   keep three thin caller files.
