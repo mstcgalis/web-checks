@@ -53,7 +53,7 @@ Missing:
 - **Who triggers a deploy.** The project CI either dispatches to the vps repo, which bumps the lock
   and runs its existing CI apply, or the vps repo polls. The vps repo already has CI apply (D18) and a
   weekly flake-update job, so dispatch → lock-bump PR → auto-merge for staging is the likely shape.
-- **Staging per site.** Sonda has staging on `dev`; how a generic site gets a staging vhost.
+- **Staging per site.** Sonda has staging on `staging` (renamed from `dev`); staging is opt-in per site (see the store-site spec).
 - **Content sync** (`content.just`, `docs/server-contract.md` §11 in sonda) generalised for stateful
   stacks: pull-first, dry-run, path-scoped push, merge-only.
 - **DNS** through `tofu/dns` in vps: one record set per site from the same site entry.
@@ -63,7 +63,7 @@ Missing:
 Missing (this spec only moves sonda's test job to `nix develop -c just check`):
 
 - **Reusable workflows in the wdk**: `check.yml` (`workflow_call`, `nix develop -c just check`, with Nix
-  cache) done and shipped as a caller in each template. Missing: deploy-staging (push to `dev`), deploy-production (push to `main`, after tests pass). Projects
+  cache) done and shipped as a caller in each template. Missing: deploy-staging (push to `staging`), deploy-production (push to `main`, after tests pass). Projects
   keep three thin caller files.
 - ~~**Nix caching in CI**~~ done: `check.yml` uses magic-nix-cache. Cachix only if that proves flaky.
 - **Deploy credentials:** which secret the project CI holds to dispatch to vps, scoped how.
@@ -75,7 +75,7 @@ Missing (this spec only moves sonda's test job to `nix develop -c just check`):
 Missing entirely. Its likely steps, each calling an existing module:
 
 1. Pick stack and name → `nix flake init -t web-dev-kit#<stack>`, then `git init`.
-2. `gh repo create`, then push `main` and `dev`.
+2. `gh repo create`, then push `main` (and `staging` if the site opts in).
 3. Domain → a DNS records PR in vps `tofu/dns`. Registrar purchase is out of scope unless scripted
    later.
 4. A site entry PR in vps (`site.nix` instance + flake input).

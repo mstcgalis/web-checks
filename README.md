@@ -88,7 +88,7 @@ update `outputHash` in `flake.nix`.
 
 ## Branches and releases
 
-Projects: `dev` deploys staging, `main` deploys production; both fast-forward only, conventional
+Projects: `staging` deploys staging, `main` deploys production; both fast-forward only, conventional
 commits. The wdk itself: work on `web-kit`, fast-forward `main`, tag `vX.Y.Z` from `main` (semver;
 `package.json` is the version source). Projects bump `inputs.wdk` to the tag.
 
