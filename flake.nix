@@ -103,6 +103,43 @@
           '';
         };
 
+      # A build-stack site as a store path: `packages.default = wdk.lib.buildSite { ... }`.
+      # `nodeModulesHash`: build once with lib.fakeHash, paste the `got:`; bump after every bun.lock change.
+      lib.buildSite = { pkgs, src, nodeModulesHash, build ? "bun --bun x vite build", out ? "dist" }:
+        let
+          nodeModules = pkgs.stdenvNoCC.mkDerivation {
+            name = "site-node-modules";
+            src = pkgs.lib.fileset.toSource {
+              root = src;
+              fileset = pkgs.lib.fileset.unions [ (src + "/package.json") (src + "/bun.lock") ];
+            };
+            nativeBuildInputs = [ pkgs.bun ];
+            dontConfigure = true;
+            buildPhase = ''
+              export HOME=$TMPDIR
+              bun install --frozen-lockfile --ignore-scripts
+            '';
+            installPhase = "mkdir $out && cp -r node_modules $out/";
+            dontFixup = true;
+            outputHashMode = "recursive";
+            outputHashAlgo = "sha256";
+            outputHash = nodeModulesHash;
+          };
+        in pkgs.stdenvNoCC.mkDerivation {
+          name = "site";
+          inherit src;
+          nativeBuildInputs = [ pkgs.bun ];
+          dontConfigure = true;
+          buildPhase = ''
+            export HOME=$TMPDIR
+            cp -r ${nodeModules}/node_modules node_modules
+            chmod -R u+w node_modules
+            ${build}
+          '';
+          installPhase = "cp -r ${out} $out";
+          dontFixup = true;
+        };
+
       templates = nixpkgs.lib.genAttrs [ "static" "kirby" "eleventy" "vite" "astro" ] (name: {
         path = ./templates/${name};
         description = "web-dev-kit ${name} project";
