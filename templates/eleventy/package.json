@@ -1,1 +1,1 @@
-{ "name": "site", "private": true, "type": "module", "devDependencies": { "@11ty/eleventy": "^3.0.0" } }
+{ "name": "site", "private": true, "type": "module", "devDependencies": { "@11ty/eleventy": "latest" } }
