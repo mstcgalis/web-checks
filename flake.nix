@@ -106,7 +106,7 @@
       # A build-stack site as a store path: `packages.default = wdk.lib.buildSite { ... }`.
       # Installs every platform's native bindings (--os/--cpu '*'), so the hash is the same on a Mac and the server.
       # `nodeModulesHash`: build once with lib.fakeHash, paste the `got:`; bump after every bun.lock change.
-      lib.buildSite = { pkgs, src, nodeModulesHash, build ? "bun --bun x vite build", out ? "dist" }:
+      lib.buildSite = { pkgs, src, nodeModulesHash, build ? "node node_modules/.bin/vite build", out ? "dist" }:
         let
           nodeModules = pkgs.stdenvNoCC.mkDerivation {
             name = "site-node-modules";
@@ -129,7 +129,7 @@
         in pkgs.stdenvNoCC.mkDerivation {
           name = "site";
           inherit src;
-          nativeBuildInputs = [ pkgs.bun ];
+          nativeBuildInputs = [ pkgs.bun pkgs.nodejs ];
           dontConfigure = true;
           buildPhase = ''
             set -x # a failure here is otherwise silent in the last-lines log
