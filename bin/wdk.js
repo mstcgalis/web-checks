@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 // wdk <command>: one file per command in lib/cmd/, each exporting run(args) → exit code.
-const COMMANDS = ['a11y', 'compat', 'smoke', 'shots', 'perf', 'serve-dir', 'install-browsers'];
+const COMMANDS = ['a11y', 'compat', 'smoke', 'shots', 'perf', 'load', 'serve-dir', 'install-browsers'];
 const [cmd, ...args] = process.argv.slice(2);
 if (!COMMANDS.includes(cmd)) {
 	console.error(`usage: wdk <${COMMANDS.join('|')}> [options] — see the web-dev-kit README`);
