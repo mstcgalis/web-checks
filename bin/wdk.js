@@ -6,6 +6,7 @@ if (!COMMANDS.includes(cmd)) {
 	console.error(`usage: wdk <${COMMANDS.join('|')}> [options] — see the web-dev-kit README`);
 	process.exit(2);
 }
+if (['a11y', 'smoke', 'shots', 'perf', 'load'].includes(cmd)) (await import('../lib/browsers.js')).linuxBrowsers();
 const { run } = await import(`../lib/cmd/${cmd}.js`);
 try {
 	process.exit((await run(args)) ?? 0);

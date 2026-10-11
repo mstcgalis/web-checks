@@ -53,6 +53,10 @@
           '';
         };
         default = wdk;
+      } // pkgs.lib.optionalAttrs pkgs.stdenv.isLinux {
+        # Fetched by lib/browsers.js only when a command launches a browser.
+        playwright-browsers = nixpkgs-browsers.legacyPackages.${pkgs.stdenv.hostPlatform.system}.playwright-driver.browsers;
+        mesa = nixpkgs-browsers.legacyPackages.${pkgs.stdenv.hostPlatform.system}.mesa;
       } // pkgs.lib.optionalAttrs pkgs.stdenv.isDarwin {
         firefox-esr-115 = pkgs.stdenvNoCC.mkDerivation rec {
           pname = "firefox-esr-115";
@@ -90,17 +94,10 @@
             # Same attribute as the vps PHP-FPM pool (services.phpfpm.pools.*.phpPackage).
             kirby = [ pkgs.php85 pkgs.php85Packages.composer ];
           };
-        in pkgs.mkShell {
+        in pkgs.mkShellNoCC {
           packages = [ self.packages.${system}.wdk pkgs.just pkgs.bun ] ++ stacks.${stack} ++ packages;
-          shellHook = pkgs.lib.optionalString pkgs.stdenv.isLinux ''
-            export PLAYWRIGHT_BROWSERS_PATH=${nixpkgs-browsers.legacyPackages.${system}.playwright-driver.browsers}
-            export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true
-            # Nix's WebKit (WPE) finds no EGL driver off NixOS (no /run/opengl-driver) and
-            # aborts every newPage: "Could not create EGL display". Point it at Mesa's.
-            export __EGL_VENDOR_LIBRARY_DIRS=${nixpkgs-browsers.legacyPackages.${system}.mesa}/share/glvnd/egl_vendor.d
-          '' + pkgs.lib.optionalString pkgs.stdenv.isDarwin ''
-            export WDK_FIREFOX_115=${self.packages.${system}.firefox-esr-115}/Applications/Firefox.app/Contents/MacOS/firefox
-          '';
+          # A flake ref, not browser store paths: lib/browsers.js fetches them when a command launches one.
+          shellHook = "export WDK_FLAKE=path:${self}";
         };
 
       # A build-stack site as a store path: `packages.default = wdk.lib.buildSite { ... }`.
