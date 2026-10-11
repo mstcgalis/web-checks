@@ -1,14 +1,17 @@
+# wdk lives in the nix dev shell; from a plain terminal, enter it per call.
+wdk := if env("IN_NIX_SHELL", "") != "" { "wdk" } else { "nix develop -c wdk" }
+
 default:
     @just --list
 
 serve-at PORT:
-    wdk serve-dir dist {{PORT}}
+    {{wdk}} serve-dir dist {{PORT}}
 
 build:
     rm -rf dist
     bunx vite build
 
 check: build
-    wdk compat
-    wdk smoke
-    wdk a11y
+    {{wdk}} compat
+    {{wdk}} smoke
+    {{wdk}} a11y

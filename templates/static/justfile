@@ -1,14 +1,17 @@
+# wdk lives in the nix dev shell; from a plain terminal, enter it per call.
+wdk := if env("IN_NIX_SHELL", "") != "" { "wdk" } else { "nix develop -c wdk" }
+
 default:
     @just --list
 
 # required by wdk: a foreground server on PORT
 serve-at PORT:
-    wdk serve-dir site {{PORT}}
+    {{wdk}} serve-dir site {{PORT}}
 
 # no build step
 build:
 
 check:
-    wdk compat
-    wdk smoke
-    wdk a11y
+    {{wdk}} compat
+    {{wdk}} smoke
+    {{wdk}} a11y
