@@ -1,6 +1,6 @@
 {
   "name": "web-dev-kit",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Shared checks, stack shells and delivery scripts for web projects.",
   "license": "AGPL-3.0-only",
   "type": "module",

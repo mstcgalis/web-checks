@@ -18,7 +18,7 @@ starter page. `static` serves `site/`; `eleventy` builds `src/` to `_site/` with
 ```nix
 # flake.nix
 {
-  inputs.wdk.url = "github:mstcgalis/web-dev-kit/v0.5.0";
+  inputs.wdk.url = "github:mstcgalis/web-dev-kit/v0.6.0";
   inputs.nixpkgs.follows = "wdk/nixpkgs";
   outputs = { wdk, nixpkgs, ... }: {
     devShells = nixpkgs.lib.genAttrs [ "aarch64-darwin" "x86_64-linux" ] (system: {
