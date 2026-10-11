@@ -86,6 +86,14 @@ Each of these produced confident, wrong numbers once:
 `nix develop`, then `bun install`, then `just check`. After changing `bun.lock`, run `just hash` and
 update `outputHash` in `flake.nix`.
 
+## Private repos
+
+Site repos stay private; Nix fetches them (and the wdk, if it goes private) with one read-only GitHub
+token, `NIX_ACCESS_TOKEN`: a fine-grained PAT, Contents read-only, on all repositories, so new repos
+need no per-repo step. Locally: `access-tokens = github.com=<token>` in `~/.config/nix/nix.conf`. In CI:
+a repo secret of that name (the vps repo needs it; the reusable `check.yml` uses it when set and callers
+pass `secrets: inherit`). The bootstrap CLI sets it with `gh secret set`.
+
 ## Branches and releases
 
 Projects: `staging` deploys staging, `main` deploys production; both fast-forward only, conventional

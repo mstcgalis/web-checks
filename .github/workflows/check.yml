@@ -6,15 +6,23 @@ on:
       submodules:
         type: boolean
         default: false
+    secrets:
+      # Read-only GitHub token so Nix can fetch private flake inputs (the wdk, sibling repos).
+      NIX_ACCESS_TOKEN:
+        required: false
 permissions:
   contents: read
 jobs:
   check:
     runs-on: ubuntu-latest
+    env:
+      T: ${{ secrets.NIX_ACCESS_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: ${{ inputs.submodules }}
       - uses: DeterminateSystems/determinate-nix-action@v3
+      - if: env.T != ''
+        run: echo "NIX_CONFIG=access-tokens = github.com=$T" >> "$GITHUB_ENV"
       - uses: DeterminateSystems/magic-nix-cache-action@v13
       - run: nix develop -c just check

@@ -66,6 +66,7 @@ Missing (this spec only moves sonda's test job to `nix develop -c just check`):
   cache) done and shipped as a caller in each template. Missing: deploy-staging (push to `staging`), deploy-production (push to `main`, after tests pass). Projects
   keep three thin caller files.
 - ~~**Nix caching in CI**~~ done: `check.yml` uses magic-nix-cache. Cachix only if that proves flaky.
+- **Private-repo fetch** (decided 2026-10-11): one read-only `NIX_ACCESS_TOKEN` (README "Private repos"); wired into the vps workflows and `check.yml`. Creating the PAT is a one-time manual step.
 - **Deploy credentials:** which secret the project CI holds to dispatch to vps, scoped how.
 - **wdk releases:** tag → each project bumps `inputs.wdk`. Whether a bot opens those PRs, like the
   vps weekly flake update.

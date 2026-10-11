@@ -5,3 +5,4 @@ jobs:
     uses: mstcgalis/web-dev-kit/.github/workflows/check.yml@v0.6.1
     with:
       submodules: true
+    secrets: inherit
