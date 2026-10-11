@@ -41,7 +41,7 @@ stateless); sonda follows once that path is proven.
 
 Missing:
 
-- **One parametrised `site.nix`** to replace `dgalis-sk.nix`, `sondafestival.nix` and
+- **One parametrised `site.nix`** (done for `store` sites, 2026-10-11: iloweit.sk and dgalis.sk are served from flake builds; staging opt-in not built) to replace `dgalis-sk.nix`, `sondafestival.nix` and
   `iloweit.nix`: domain(s), www redirect, Caddy vhost, TLS, the deploy user, PHP-FPM pool (Kirby),
   secrets via sops-nix, Umami site id.
 - **Three deploy kinds:**
