@@ -5,7 +5,7 @@ test('load reports LCP and image bytes per page × viewport, the heaviest image 
 	const r = wdk(['load', '--skip', '^/about']);
 	expect(r.code).toBe(0);
 	expect(r.out).toMatch(/^\/$/m);
-	expect(r.out).toMatch(/390×844@3 4G {2}LCP \d+ ms \(plasma\.jpg\) {2}images 1 files \d+ KB · after scroll 1 files/);
+	expect(r.out).toMatch(/390×844@3 4G {2}LCP \d+ ms \(plasma\.jpg\) {2}hero \d+ ms \(plasma\.jpg\) {2}images 1 files \d+ KB · after scroll 1 files/);
 	expect(r.out).toMatch(/1280×800@2 {2}LCP \d+ ms/);
 	expect(r.out).toMatch(/\d+ KB {2}\/plasma\.jpg/);
 }, 120_000);
@@ -80,4 +80,14 @@ test('load scrolls to the very bottom, past stretches where a step does not move
 	);
 	expect(out).toMatch(/390×844@3 4G {2}LCP \d+ ms \(<h1> text\) {2}images 0 files 0 KB · after scroll 1 files/);
 	expect(out).toMatch(/1280×800@2 {2}LCP \d+ ms \(<h1> text\) {2}images 0 files 0 KB · after scroll 1 files/);
+}, 120_000);
+
+test('load --slow reports when a full-viewport hero arrives, which LCP leaves out', async () => {
+	const out = await loadAgainst(
+		'<!doctype html><html lang="en"><title>t</title><body style="margin:0"><h1>t</h1><img src="/hero.jpg" alt="h" style="position:fixed;inset:0;width:100vw;height:100vh;z-index:-1"></body>',
+		['--slow'],
+	);
+	// The phone may count the image (it is not upscaled there); the laptop leaves it out of LCP.
+	expect(out).toMatch(/390×844@3 slow {2}LCP \d+ ms \([^)]+\) {2}hero \d+ ms \(hero\.jpg\) {2}images 1 files/);
+	expect(out).toMatch(/1280×800@2 slow {2}LCP \d+ ms \(<h1> text\) {2}hero \d+ ms \(hero\.jpg\)/);
 }, 120_000);

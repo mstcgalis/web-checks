@@ -42,7 +42,7 @@ On macOS, run `wdk install-browsers` once. On Linux the dev shell provides the b
 | `wdk smoke` | every page × engine; runtime errors, `console.error`, broken same-origin requests | 1 on errors |
 | `wdk shots` | contact sheet at `.wdk/shots/…/index.html`: pages × engine × viewport | 0 |
 | `wdk perf` | CPU per perf knob, idle and mouse; macOS only (see traps below) | 0 |
-| `wdk load` | every page cold (no HTTP cache) per viewport: LCP, image KB on load and after scrolling, heaviest files; phone viewports as 3× on 4G; `--url ORIGIN` for a deployed site, `--top N`; `--cdn` adds each image's `cf-cache-status`, edge vs origin time, and flags what will not cache | 0 |
+| `wdk load` | every page cold (no HTTP cache) per viewport: LCP, when the largest image in view arrived (Chrome leaves full-viewport ones out of LCP), image KB on load and after scrolling, heaviest files; phone viewports as 3× on 4G; `--url ORIGIN` for a deployed site, `--top N`; `--slow` for Lighthouse's slow mobile (1.6 Mbit/s, 150 ms, 4× CPU) on every viewport; `--cdn` adds each image's `cf-cache-status`, edge vs origin time, and flags what will not cache | 0 |
 
 `--engines a,b` overrides the config for `smoke`, `shots` and `perf`; `--skip REGEX` for the crawl.
 
