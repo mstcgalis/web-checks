@@ -1,5 +1,5 @@
-# wdk lives in the nix dev shell; from a plain terminal, enter it per call.
-wdk := if env("IN_NIX_SHELL", "") != "" { "wdk" } else { "nix develop -c wdk" }
+# wdk on PATH (dev shell, direnv) or, from a plain terminal, via the dev shell per call.
+wdk := if `command -v wdk || true` != "" { "wdk" } else { "nix develop -c wdk" }
 
 default:
     @just --list
