@@ -42,7 +42,7 @@ On macOS, run `wdk install-browsers` once. On Linux the dev shell provides the b
 | `wdk smoke` | every page × engine; runtime errors, `console.error`, broken same-origin requests | 1 on errors |
 | `wdk shots` | contact sheet at `.wdk/shots/…/index.html`: pages × engine × viewport | 0 |
 | `wdk perf` | CPU per perf knob, idle and mouse; macOS only (see traps below) | 0 |
-| `wdk load` | every page cold (no HTTP cache) per viewport: LCP, image KB on load and after scrolling, heaviest files; phone viewports as 3× on 4G; `--url ORIGIN` for a deployed site, `--top N` | 0 |
+| `wdk load` | every page cold (no HTTP cache) per viewport: LCP, image KB on load and after scrolling, heaviest files; phone viewports as 3× on 4G; `--url ORIGIN` for a deployed site, `--top N`; `--cdn` adds each image's `cf-cache-status`, edge vs origin time, and flags what will not cache | 0 |
 
 `--engines a,b` overrides the config for `smoke`, `shots` and `perf`; `--skip REGEX` for the crawl.
 
@@ -74,7 +74,7 @@ Each of these produced confident, wrong numbers once:
 3. Counting one process: count the whole tree, including GPU and XPC helpers.
 4. Background tabs keep animating: one page per measurement.
 5. Occluded windows aren't composited: the window is forced frontmost before sampling.
-6. Firefox ESR updates itself: use the flake's pinned FF115 (`$WDK_FIREFOX_115`).
+6. Firefox ESR updates itself: use the flake's pinned FF115 (`$WDK_FIREFOX_115`, fetched on first use).
 7. One run proves nothing: the median and range of `--repeat` runs.
 8. Warm-up shorter than the page's own wake time (a loop that sleeps once settled): you measure the
    wake. Raise `--warm`.
