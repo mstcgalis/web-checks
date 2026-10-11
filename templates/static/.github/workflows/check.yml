@@ -3,4 +3,5 @@ on: [push, pull_request]
 jobs:
   check:
     uses: mstcgalis/web-dev-kit/.github/workflows/check.yml@v0.6.1
-    secrets: inherit
+    secrets:
+      NIX_ACCESS_TOKEN: ${{ secrets.NIX_ACCESS_TOKEN }}
