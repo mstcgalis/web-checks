@@ -4,7 +4,6 @@
   outputs = { wdk, nixpkgs, ... }: {
     # The built site as a store path, for the vps flake. Run `bun install`, then `nix build`
     # once with the fake hash and paste the `got:` value; redo after every bun.lock change.
-    # The hash is per platform (native bindings), so take it from x86_64-linux for the server.
     packages = nixpkgs.lib.genAttrs [ "aarch64-darwin" "x86_64-linux" ] (system: {
       default = wdk.lib.buildSite { pkgs = nixpkgs.legacyPackages.${system}; src = ./.; build = "bun --bun x eleventy"; out = "_site"; nodeModulesHash = nixpkgs.lib.fakeHash; };
     });

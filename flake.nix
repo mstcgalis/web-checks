@@ -104,6 +104,7 @@
         };
 
       # A build-stack site as a store path: `packages.default = wdk.lib.buildSite { ... }`.
+      # Installs every platform's native bindings (--os/--cpu '*'), so the hash is the same on a Mac and the server.
       # `nodeModulesHash`: build once with lib.fakeHash, paste the `got:`; bump after every bun.lock change.
       lib.buildSite = { pkgs, src, nodeModulesHash, build ? "bun --bun x vite build", out ? "dist" }:
         let
@@ -117,7 +118,7 @@
             dontConfigure = true;
             buildPhase = ''
               export HOME=$TMPDIR
-              bun install --frozen-lockfile --ignore-scripts
+              bun install --frozen-lockfile --ignore-scripts --os='*' --cpu='*'
             '';
             installPhase = "mkdir $out && cp -r node_modules $out/";
             dontFixup = true;
