@@ -132,7 +132,6 @@
           nativeBuildInputs = [ pkgs.bun pkgs.nodejs ];
           dontConfigure = true;
           buildPhase = ''
-            set -x # a failure here is otherwise silent in the last-lines log
             export HOME=$TMPDIR
             cp -r ${nodeModules}/node_modules node_modules
             chmod -R u+w node_modules
@@ -145,6 +144,15 @@
       templates = nixpkgs.lib.genAttrs [ "static" "kirby" "eleventy" "vite" "astro" ] (name: {
         path = ./templates/${name};
         description = "web-dev-kit ${name} project";
+      });
+
+      # Built on Linux CI (`nix flake check`): the fixed-output hash and the build must hold off a Mac.
+      checks = forAll (pkgs: {
+        build-site = self.lib.buildSite {
+          inherit pkgs;
+          src = ./test/build-site;
+          nodeModulesHash = "sha256-lcJT4q3mvuyCmPgvrZHQg86k6BUBrsAgsvi0yMoUOwA=";
+        };
       });
 
       devShells = forAll (pkgs: { default = self.lib.devShell { inherit pkgs; }; });
