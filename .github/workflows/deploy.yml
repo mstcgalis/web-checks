@@ -10,8 +10,8 @@ on:
         type: string
         default: ""
     secrets:
-      # Fine-grained PAT, Actions: read and write on the vps repo only.
-      VPS_DISPATCH_TOKEN:
+      # The one fine-grained PAT: Contents read (Nix fetches) plus Actions read and write (dispatch on the vps repo).
+      NIX_ACCESS_TOKEN:
         required: true
 permissions: {}
 jobs:
@@ -20,5 +20,5 @@ jobs:
     steps:
       - run: gh workflow run site-update.yml -R mstcgalis/vps --ref main -f input="$INPUT"
         env:
-          GH_TOKEN: ${{ secrets.VPS_DISPATCH_TOKEN }}
+          GH_TOKEN: ${{ secrets.NIX_ACCESS_TOKEN }}
           INPUT: ${{ inputs.input != '' && inputs.input || github.event.repository.name }}
