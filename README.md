@@ -10,7 +10,8 @@ nix flake init -t github:mstcgalis/web-dev-kit#static   # or kirby, eleventy, vi
 ```
 
 Each template is a flake, a `justfile` (`serve-at`, `build`, `check`), a `wdk.config.js`, an `.envrc`
-(`direnv allow` once: the dev shell then loads on `cd`, and no command pays for `nix develop`) and a
+(`direnv allow` once: the dev shell then loads on `cd`, and no command pays for `nix develop`;
+with [nix-direnv](https://github.com/nix-community/nix-direnv) the shell is cached, so `cd` is instant too) and a
 starter page. `static` serves `site/`; `eleventy` builds `src/` to `_site/` with Eleventy; `vite` builds to `dist/` with Vite; `astro` builds to `dist/` with Astro;
 `kirby` expects Kirby in `./kirby` (git submodule) and serves it with `php -S`.
 
