@@ -88,6 +88,9 @@ test('a broken or misspelt wdk.config.js is named with the fix, exit 2', () => {
 	const typo = inDir(project({ config: { page: {} } }), ['doctor']);
 	expect(typo.out).toContain('✗ wdk.config.js: unknown key(s) page — expected pages, engines');
 	expect(typo.code).toBe(1);
+	const nested = inDir(project({ config: { pages: { skp: 'x' } } }), ['check']);
+	expect(nested.err).toContain('unknown key(s) pages.skp — expected pages.start, pages.skip, pages.limit');
+	expect(nested.code).toBe(2);
 });
 
 test('a justfile without serve-at says what to add', () => {
