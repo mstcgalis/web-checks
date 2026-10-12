@@ -95,8 +95,8 @@ Also open: idempotency, i.e. re-running it on a half-bootstrapped project.
 - **Pixel diffs** against an approved baseline: only the contact sheet is planned.
 - **Old Safari**: unreachable on current macOS. Add an old-macOS VM or a paid device cloud if a
   client needs it.
-- **Old Chrome** (e.g. 116 via Chrome for Testing): the `exe:chrome` path is designed but
-  unverified.
+- **Old Chrome** (e.g. 116 via Chrome for Testing): the `exe:chrome` path is tested (smoke and shots drive
+  Playwright's Chromium through it, 2026-10-12). Only a real old binary is unchecked; point `exe:chrome:<path>` at one if a client needs it.
 - **Perf on Linux** (`cpu.js` is macOS-only), and perf in CI: CPU on shared runners is noise, so
   this stays local unless self-hosted runners appear.
 - **LAN gallery** (an index page of every page × variant): not chosen; `perf --serve` prints URLs.
@@ -129,7 +129,7 @@ Also open: idempotency, i.e. re-running it on a half-bootstrapped project.
 - **`freePort()` race.** Fixed in v0.2.11 for the real case: a serve-at that loses its port exits
   on the bind error, so an answer only counts once serve-at has outlived it 300ms. Still fooled by
   a serve-at that keeps running after a failed bind; a nonce header would close that, at the cost
-  of every stack's recipe honouring it.
+  of every stack's recipe honouring it. Decided 2026-10-12: not worth that cost; left as is.
 - **`wdk perf` on Firefox/WebKit is too noisy on a machine in use.** Firefox crashes mid-matrix (now
   relaunched, v0.2.8); WebKit's synthetic pointer stops when its window loses the front, so mouse
   readings collapse halfway through. sonda-web runs perf Chrome-only (2026-10-10). Fix would need
