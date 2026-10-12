@@ -24,7 +24,7 @@ const noBrowsers = () => ({ PLAYWRIGHT_BROWSERS_PATH: mkdtempSync(join(tmpdir(),
 
 test('no command prints help with every command and exits 0', () => {
 	const r = wdk([]);
-	for (const c of ['check', 'compat', 'smoke', 'a11y', 'load', 'shots', 'perf', 'doctor', 'update', 'install-browsers', 'serve-dir']) expect(r.out).toContain(`  ${c} `);
+	for (const c of ['check', 'compat', 'smoke', 'a11y', 'load', 'shots', 'perf', 'doctor', 'update', 'deploy', 'install-browsers', 'serve-dir']) expect(r.out).toContain(`  ${c} `);
 	expect(r.code).toBe(0);
 	expect(wdk(['smoke', '--help']).out).toContain('wdk <command>');
 });

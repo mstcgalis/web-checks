@@ -95,7 +95,7 @@
             kirby = [ pkgs.php85 pkgs.php85Packages.composer ];
           };
         in pkgs.mkShellNoCC {
-          packages = [ self.packages.${system}.wdk pkgs.just pkgs.bun ] ++ stacks.${stack} ++ packages;
+          packages = [ self.packages.${system}.wdk pkgs.just pkgs.bun pkgs.zstd ] ++ stacks.${stack} ++ packages;
           # A flake ref, not browser store paths: lib/browsers.js fetches them when a command launches one.
           shellHook = "export WDK_FLAKE=path:${self}";
         };
