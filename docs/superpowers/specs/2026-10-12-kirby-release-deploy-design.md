@@ -231,3 +231,10 @@ template's `build` recipe and asset helper exist.
 6. One week later: deletions (9.7).
 7. wdk Kirby template: `deploy` config, `build` recipe, asset helper, `index.php` roots, `deploy.yml` caller; reference.md and
    roadmap updated.
+
+## Verified (2026-10-12)
+
+- Caddy on the vps's pinned nixpkgs is 2.11.7, so `resolve_root_symlink` is available.
+- Kirby 5.5.2 defines `logs` (`site/logs`) and `license` (`config/.license`) roots (`kirby/src/Cms/Core.php:366-367`).
+- Still to confirm on staging: Kirby keeps unknown fields when a page is saved (rollback depends on it).
+- The task list above is the plan; each task is executed test-first.
