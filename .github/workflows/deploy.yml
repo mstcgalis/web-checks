@@ -1,6 +1,7 @@
 # Reusable: a site calls this after its checks pass on main, with
 # `uses: mstcgalis/web-dev-kit/.github/workflows/deploy.yml@vX.Y.Z`. It asks the vps repo to bump
-# the site's flake input and deploy (vps .github/workflows/site-update.yml).
+# the site's flake input and deploy (vps .github/workflows/site-update.yml). Called from the
+# `staging` branch it bumps `<input>-staging` instead (the vps site's `staging = true` opt-in).
 name: deploy
 on:
   workflow_call:
@@ -21,4 +22,4 @@ jobs:
       - run: gh workflow run site-update.yml -R mstcgalis/vps --ref main -f input="$INPUT"
         env:
           GH_TOKEN: ${{ secrets.NIX_ACCESS_TOKEN }}
-          INPUT: ${{ inputs.input != '' && inputs.input || github.event.repository.name }}
+          INPUT: ${{ inputs.input != '' && inputs.input || github.event.repository.name }}${{ github.ref_name == 'staging' && '-staging' || '' }}

@@ -1,5 +1,6 @@
 name: deploy
 # Push to main: check, then ask the vps repo to bump this site's input and deploy.
+# Staging is opt-in: add `staging` to branches once the vps site has `staging = true`.
 on:
   push:
     branches: [main]

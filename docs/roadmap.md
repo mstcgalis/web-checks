@@ -53,7 +53,7 @@ Missing:
 - **Who triggers a deploy.** The project CI either dispatches to the vps repo, which bumps the lock
   and runs its existing CI apply, or the vps repo polls. The vps repo already has CI apply (D18) and a
   weekly flake-update job, so dispatch → lock-bump PR → auto-merge for staging is the likely shape.
-- **Staging per site.** Sonda has staging on `staging` (renamed from `dev`); staging is opt-in per site (see the store-site spec).
+- **Staging per site** (done 2026-10-12 for `store` sites, untested live; no site has opted in): see reference.md "Deploys". Sonda's staging is still `git pull`.
 - **Content sync** (`content.just`, `docs/server-contract.md` §11 in sonda) generalised for stateful
   stacks: pull-first, dry-run, path-scoped push, merge-only.
 - **DNS** through `tofu/dns` in vps: one record set per site from the same site entry.
@@ -62,10 +62,9 @@ Missing:
 
 Missing (this spec only moves sonda's test job to `nix develop -c just check`):
 
-- **Deploy trigger** (done 2026-10-11, untested live): push to `main` -> `deploy.yml` -> vps `site-update.yml` (reference.md "Deploys"). Staging deploys not built.
+- **Deploy trigger** (done 2026-10-11, untested live): push to `main` -> `deploy.yml` -> vps `site-update.yml` (reference.md "Deploys"). Staging deploys: built (see below).
 - **Reusable workflows in the wdk**: `check.yml` (`workflow_call`, `nix develop -c just check`, with Nix
-  cache) done and shipped as a caller in each template. Missing: deploy-staging (push to `staging`), deploy-production (push to `main`, after tests pass). Projects
-  keep three thin caller files.
+  cache) done and shipped as a caller in each template. Staging and production both go through `deploy.yml` (the branch picks the input). Projects keep two thin caller files.
 - ~~**Nix caching in CI**~~ done: `check.yml` uses magic-nix-cache. Cachix only if that proves flaky.
 - **Private-repo fetch** (decided 2026-10-11): one read-only `NIX_ACCESS_TOKEN` (reference.md "Private repos"); wired into the vps workflows and `check.yml`. Creating the PAT is a one-time manual step.
 - **Deploy credentials:** which secret the project CI holds to dispatch to vps, scoped how.

@@ -71,8 +71,11 @@ The bootstrap CLI will set it with `gh secret set`.
 A site is a flake input of the vps repo. Push to `main`: the site's `deploy.yml` runs `check.yml`, then
 the reusable `deploy.yml` dispatches the vps repo's `site-update.yml`, which bumps that input, builds
 the site, merges the lock bump and dispatches the deploy (Playground canary, then Production). The
-site repo needs one secret, `NIX_ACCESS_TOKEN`, with Actions read and write. Kirby sites are stateful
-and not covered yet.
+site repo needs one secret, `NIX_ACCESS_TOKEN`, with Actions read and write. Staging is opt-in: set
+`services.sites.<name>.staging = true` and `stagingRoot` in vps (a second flake input on the
+project's `staging` branch, named `<input>-staging`), add `staging` to the site's `deploy.yml`
+branches, and add a `staging.<domain>` DNS record. A push to `staging` then bumps `<input>-staging`;
+`staging.<domain>` is served with `X-Robots-Tag: noindex`. Kirby sites are stateful and not covered yet.
 
 ## Branches and releases
 
