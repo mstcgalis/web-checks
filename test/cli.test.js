@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { wdk } from './run.js';
@@ -24,7 +24,7 @@ const noBrowsers = () => ({ PLAYWRIGHT_BROWSERS_PATH: mkdtempSync(join(tmpdir(),
 
 test('no command prints help with every command and exits 0', () => {
 	const r = wdk([]);
-	for (const c of ['check', 'compat', 'smoke', 'a11y', 'load', 'shots', 'perf', 'doctor', 'install-browsers', 'serve-dir']) expect(r.out).toContain(`  ${c} `);
+	for (const c of ['check', 'compat', 'smoke', 'a11y', 'load', 'shots', 'perf', 'doctor', 'update', 'install-browsers', 'serve-dir']) expect(r.out).toContain(`  ${c} `);
 	expect(r.code).toBe(0);
 	expect(wdk(['smoke', '--help']).out).toContain('wdk <command>');
 });
@@ -107,3 +107,19 @@ test('a justfile without serve-at says what to add', () => {
 	expect(r.err).toContain('the justfile needs `serve-at PORT`, a foreground server on PORT');
 	expect(r.code).toBe(2);
 }, 30_000);
+
+test('update re-pins the wdk workflows and a tag-pinned input, then updates the lock', () => {
+	const dir = mkdtempSync(join(tmpdir(), 'wdk-update-'));
+	mkdirSync(join(dir, '.github', 'workflows'), { recursive: true });
+	const wf = (v) => `jobs:\n  a:\n    uses: mstcgalis/web-dev-kit/.github/workflows/check.yml@${v}\n  b:\n    uses: actions/checkout@v4\n`;
+	writeFileSync(join(dir, '.github', 'workflows', 'check.yml'), wf('v0.1.0'));
+	writeFileSync(join(dir, 'flake.nix'), '{ inputs.wdk.url = "github:mstcgalis/web-dev-kit/v0.1.0"; }');
+	const bin = mkdtempSync(join(tmpdir(), 'wdk-fakenix-'));
+	writeFileSync(join(bin, 'nix'), `#!/bin/sh\necho "$@" > ${dir}/nix-args\n`, { mode: 0o755 });
+	const r = inDir(dir, ['update', '--tag', 'v9.9.9'], { PATH: `${bin}:${process.env.PATH}` });
+	expect(r.code).toBe(0);
+	expect(r.out).toContain('flake.nix -> v9.9.9');
+	expect(readFileSync(join(dir, '.github', 'workflows', 'check.yml'), 'utf8')).toBe(wf('v9.9.9'));
+	expect(readFileSync(join(dir, 'flake.nix'), 'utf8')).toContain('web-dev-kit/v9.9.9"');
+	expect(readFileSync(join(dir, 'nix-args'), 'utf8').trim()).toBe('flake update wdk');
+});

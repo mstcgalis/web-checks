@@ -1,0 +1,34 @@
+# Reusable: a project calls this on a schedule, with
+# `uses: mstcgalis/web-dev-kit/.github/workflows/update.yml@vX.Y.Z`. It runs `wdk update` (the
+# latest release's workflow pins and flake.lock) and opens a PR if anything moved.
+name: update
+on:
+  workflow_call:
+    secrets:
+      # Fine-grained PAT on the project: Contents and Pull requests read and write (plus Contents
+      # read on the wdk). A PR from GITHUB_TOKEN would not start the project's checks; this one does.
+      NIX_ACCESS_TOKEN:
+        required: true
+permissions: {}
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.NIX_ACCESS_TOKEN }}
+      NIX_CONFIG: access-tokens = github.com=${{ secrets.NIX_ACCESS_TOKEN }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          token: ${{ secrets.NIX_ACCESS_TOKEN }}
+      - uses: DeterminateSystems/determinate-nix-action@d0c908e6cbe9f89f36ed8205a3ab6f092636916a # v3
+      - run: nix run github:mstcgalis/web-dev-kit#wdk -- update
+      - name: open a PR
+        run: |
+          git diff --quiet && { echo "wdk is current"; exit 0; }
+          branch="wdk-update/${GITHUB_RUN_ID}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git commit -qam "chore(deps): bump wdk"
+          git push -q origin "$branch"
+          gh pr create --fill --base "${GITHUB_REF_NAME}" --head "$branch"

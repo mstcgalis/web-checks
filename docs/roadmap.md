@@ -68,8 +68,7 @@ Missing (this spec only moves sonda's test job to `nix develop -c just check`):
 - ~~**Nix caching in CI**~~ done: `check.yml` uses magic-nix-cache. Cachix only if that proves flaky.
 - **Private-repo fetch** (decided 2026-10-11): one read-only `NIX_ACCESS_TOKEN` (reference.md "Private repos"); wired into the vps workflows and `check.yml`. Creating the PAT is a one-time manual step.
 - **Deploy credentials:** which secret the project CI holds to dispatch to vps, scoped how.
-- **wdk releases:** tag → each project bumps `inputs.wdk`. Whether a bot opens those PRs, like the
-  vps weekly flake update.
+- **wdk releases** (done 2026-10-12, untested live): `wdk update` and a weekly `update.yml` PR in each template.
 
 ## 5. Bootstrap CLI
 
