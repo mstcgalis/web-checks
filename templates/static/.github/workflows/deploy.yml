@@ -5,11 +5,11 @@ on:
     branches: [main]
 jobs:
   check:
-    uses: mstcgalis/web-dev-kit/.github/workflows/check.yml@v0.10.1
+    uses: mstcgalis/web-dev-kit/.github/workflows/check.yml@v0.10.2
     secrets:
       NIX_ACCESS_TOKEN: ${{ secrets.NIX_ACCESS_TOKEN }}
   deploy:
     needs: check
-    uses: mstcgalis/web-dev-kit/.github/workflows/deploy.yml@v0.10.1
+    uses: mstcgalis/web-dev-kit/.github/workflows/deploy.yml@v0.10.2
     secrets:
       NIX_ACCESS_TOKEN: ${{ secrets.NIX_ACCESS_TOKEN }}
