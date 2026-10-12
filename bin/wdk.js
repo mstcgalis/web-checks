@@ -40,6 +40,6 @@ const { run } = await import(`../lib/cmd/${cmd}.js`);
 try {
 	process.exit((await run(args)) ?? 0);
 } catch (e) {
-	console.error(`wdk ${cmd}: ${e.message}`);
+	console.error(`wdk ${cmd}: ${e.message}${e.code === 'ERR_PARSE_ARGS_UNKNOWN_OPTION' ? ' (wdk --help lists the options)' : ''}`);
 	process.exit(2);
 }

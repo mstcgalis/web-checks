@@ -36,6 +36,15 @@ test('unknown command names it, prints help and exits 2', () => {
 	expect(r.code).toBe(2);
 });
 
+test('a bad option or --skip regex says what is wrong, exit 2', () => {
+	const opt = wdk(['check', '--bogus']);
+	expect(opt.err).toBe("wdk check: Unknown option '--bogus' (wdk --help lists the options)\n");
+	expect(opt.code).toBe(2);
+	const re = inDir(project({}), ['smoke', '--skip', '(']);
+	expect(re.err).toBe('wdk smoke: pages.skip / --skip "(" is not a valid regex\n');
+	expect(re.code).toBe(2);
+});
+
 test('check runs compat, smoke and a11y on one server; findings before each summary line', () => {
 	const r = wdk(['check']);
 	expect(r.out).toContain('✗ site/style.css:3 — ');
