@@ -45,21 +45,10 @@ stateless); sonda follows once that path is proven.
 
 Missing:
 
-- **One parametrised `site.nix`** (done for `store` sites, 2026-10-11: iloweit.sk and dgalis.sk are served from flake builds; staging opt-in not built) to replace `dgalis-sk.nix`, `sondafestival.nix` and
-  `iloweit.nix`: domain(s), www redirect, Caddy vhost, TLS, the deploy user, PHP-FPM pool (Kirby),
-  secrets via sops-nix, Umami site id.
-- **Three deploy kinds:**
-  - `store`: the build output is a Nix store path, served read-only. The target for static sites.
-  - `store + state`: code in the store, mutable paths in `/var/lib/<site>`. **Not for sonda (decided
-    2026-10-12):** a deploy goes from ~20s to minutes (flake bump, build, vps CI, switch) and a hotfix then
-    waits on the vps pipeline; speed is never traded away. Reviewed design notes if it is ever revisited:
-    custom Kirby roots via `index.php` (symlinks break on PHP `__DIR__`), content-hash asset `?v=` (store
-    mtimes are 1), composer as a fixed-output derivation (`kirby/` is outside `vendor/`), gate weekly
-    flake updates on the site's tests.
-  - `pull` (today's sonda; stays, hardened: code read-only to the PHP pool, see below) and `rsync` (today's dgalis.sk): kept until each site moves.
-- **Who triggers a deploy.** The project CI either dispatches to the vps repo, which bumps the lock
-  and runs its existing CI apply, or the vps repo polls. The vps repo already has CI apply (D18) and a
-  weekly flake-update job, so dispatch → lock-bump PR → auto-merge for staging is the likely shape.
+- **One `site.nix`** (done 2026-10-12): every site is a release-deploy entry (domain, www redirect, vhost, deploy user, key).
+  Built: static sites (iloweit.sk, dgalis.sk). Not built: Kirby kind (`shared/` state, PHP-FPM pool, content-hash asset `?v=`,
+  composer), staging entries, sops secrets. Sonda stays on `git pull` until it moves; then delete its pull key.
+  `store`/`store + state`/`rsync` kinds are gone (too slow).
 - **Staging per site** (done 2026-10-12 for `store` sites, untested live; no site has opted in): see reference.md "Deploys". Sonda's staging is still `git pull`.
 - **Content sync** (`content.just`, `docs/server-contract.md` §11 in sonda) generalised for stateful
   stacks: pull-first, dry-run, path-scoped push, merge-only.
