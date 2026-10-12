@@ -23,7 +23,7 @@ jobs:
       - uses: DeterminateSystems/determinate-nix-action@d0c908e6cbe9f89f36ed8205a3ab6f092636916a # v3
       # Pinned to the commit of this very workflow file (the tag the caller named), never a moving
       # branch: this job holds a write-scoped token, so it runs only code that was reviewed and tagged.
-      - run: nix run "github:mstcgalis/web-dev-kit/${WORKFLOW_SHA}#wdk" -- update
+      - run: nix shell "github:mstcgalis/web-dev-kit/${WORKFLOW_SHA}#wdk" -c wdk update
         env:
           WORKFLOW_SHA: ${{ github.job_workflow_sha }}
       - name: open a PR
