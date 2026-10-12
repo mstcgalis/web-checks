@@ -11,7 +11,6 @@ serve-at PORT:
 # no build step
 build:
 
+# compat + smoke + a11y on one server
 check:
-    {{wdk}} compat
-    {{wdk}} smoke
-    {{wdk}} a11y
+    {{wdk}} check

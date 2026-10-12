@@ -1,4 +1,5 @@
 import { expect, test } from 'bun:test';
+import { slow } from './run.js';
 import { chmodSync, cpSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -23,23 +24,21 @@ function project(name) {
 }
 
 for (const name of ['static', 'eleventy', 'vite', 'astro']) {
-	test(`template ${name}: compat, smoke and a11y pass`, () => {
+	slow(`template ${name}: wdk check passes`, () => {
 		const dir = project(name);
 		if (name !== 'static') {
 			expect(sh(['bun', 'install'], dir).code).toBe(0);
 			expect(sh(['just', 'build'], dir).code).toBe(0);
 		}
-		expect(sh(['wdk', 'compat'], dir).code).toBe(0);
-		const smoke = sh(['wdk', 'smoke', '--engines', 'chromium'], dir);
-		expect(smoke.out).toContain('0 error(s)');
-		expect(smoke.code).toBe(0);
-		expect(sh(['wdk', 'a11y'], dir).code).toBe(0);
+		const check = sh(['wdk', 'check', '--engines', 'chromium'], dir);
+		expect(check.out).toContain('✓ smoke ');
+		expect(check.code).toBe(0);
 	}, 180_000);
 }
 
 test('template kirby: has its files and a parseable justfile', async () => {
 	const dir = project('kirby');
-	for (const f of ['flake.nix', 'justfile', 'wdk.config.js', '.gitignore', 'assets/css/style.css']) expect(await Bun.file(join(dir, f)).exists()).toBe(true);
+	for (const f of ['flake.nix', 'justfile', 'wdk.config.js', '.gitignore', '.envrc', 'assets/css/style.css']) expect(await Bun.file(join(dir, f)).exists()).toBe(true);
 	expect(sh(['just', '--list'], dir).code).toBe(0);
 });
 

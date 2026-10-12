@@ -2,3 +2,4 @@ node_modules/
 .wdk/
 result
 _site/
+.direnv/
