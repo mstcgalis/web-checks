@@ -6,14 +6,14 @@ import { wdk } from './run.js';
 
 const WDK = join(import.meta.dir, '..', 'bin', 'wdk.js');
 // A throwaway project: one clean page, a justfile and a config.
-function project({ justfile = `serve-at PORT:\n    bun ${WDK} serve-dir site {{PORT}}\n`, config = {} } = {}) {
+function project({ justfile = `serve-at PORT:\n    bun ${WDK} serve-dir site {{PORT}}\n`, config = {}, configText = `export default ${JSON.stringify(config)};` } = {}) {
 	const dir = mkdtempSync(join(tmpdir(), 'wdk-cli-'));
 	mkdirSync(join(dir, 'site'));
 	const page = (t) => `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${t}</title></head><body><main><h1>${t}</h1></main></body></html>`;
 	writeFileSync(join(dir, 'site', 'index.html'), page('Home'));
 	writeFileSync(join(dir, 'site', '404.html'), page('Not found'));
 	writeFileSync(join(dir, 'justfile'), justfile);
-	writeFileSync(join(dir, 'wdk.config.js'), `export default ${JSON.stringify(config)};`);
+	writeFileSync(join(dir, 'wdk.config.js'), configText);
 	return dir;
 }
 const inDir = (dir, args, env = {}) => {
@@ -78,5 +78,20 @@ test('install-browsers: nothing to download when the engines are on disk; unknow
 	expect(wdk(['install-browsers']).out).toBe('nothing to install\n');
 	const r = wdk(['install-browsers', 'opera']);
 	expect(r.err).toContain('unknown engine(s) opera');
+	expect(r.code).toBe(2);
+}, 30_000);
+
+test('a broken or misspelt wdk.config.js is named with the fix, exit 2', () => {
+	const broken = inDir(project({ configText: 'export default {' }), ['check']);
+	expect(broken.err).toMatch(/^wdk check: wdk\.config\.js:1:\d+: /);
+	expect(broken.code).toBe(2);
+	const typo = inDir(project({ config: { page: {} } }), ['doctor']);
+	expect(typo.out).toContain('✗ wdk.config.js: unknown key(s) page — expected pages, engines');
+	expect(typo.code).toBe(1);
+});
+
+test('a justfile without serve-at says what to add', () => {
+	const r = inDir(project({ justfile: 'build:\n    true\n' }), ['smoke']);
+	expect(r.err).toContain('the justfile needs `serve-at PORT`, a foreground server on PORT');
 	expect(r.code).toBe(2);
 }, 30_000);
