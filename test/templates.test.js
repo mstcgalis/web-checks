@@ -27,7 +27,7 @@ for (const name of ['static', 'eleventy', 'vite', 'astro']) {
 	slow(`template ${name}: wdk check passes`, () => {
 		const dir = project(name);
 		if (name !== 'static') {
-			expect(sh(['bun', 'install'], dir).code).toBe(0);
+			expect(sh(['bun', 'install', '--frozen-lockfile'], dir).code).toBe(0);
 			expect(sh(['just', 'build'], dir).code).toBe(0);
 		}
 		const check = sh(['wdk', 'check', '--engines', 'chromium'], dir);
