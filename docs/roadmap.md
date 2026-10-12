@@ -4,7 +4,7 @@ The end goal is one CLI that takes a website from first prompt to deployed (stac
 VPS, CI) in minutes. It is built from scripts, not around any one agent. This file tracks every
 piece that is decided or known but **not specced or built**, so nothing lives only in a chat log.
 
-Specced so far: [`2026-10-05-wdk-contract-and-checks-design.md`](superpowers/specs/2026-10-05-wdk-contract-and-checks-design.md)
+Specced so far: [`2026-10-05-kit-contract-and-checks-design.md`](superpowers/specs/2026-10-05-kit-contract-and-checks-design.md)
 (module 0, thin, and module 1).
 
 Build order: **1 → 3 → 4 → 2 (more stacks) → 5.** The CLI comes last: it only orchestrates
@@ -18,7 +18,7 @@ modules that already exist.
   it; the stack part goes with the stack adapter.
 - **`docs/` contracts.** Sonda has content, CSS and server contracts. Which are generic (the server
   contract is, through the vps module) and which are per project.
-- ~~**Branch and release model, written down**~~ done (README "Branches and releases").
+- ~~**Branch and release model, written down**~~ done (reference.md "Branches and releases").
 - **Fast mode** (sonda's `AGENTS.md`) as a wdk-level convention or a per-project one.
 
 ## 2. Stack adapters
@@ -62,12 +62,12 @@ Missing:
 
 Missing (this spec only moves sonda's test job to `nix develop -c just check`):
 
-- **Deploy trigger** (done 2026-10-11, untested live): push to `main` -> `deploy.yml` -> vps `site-update.yml` (README "Deploys"). Staging deploys not built.
+- **Deploy trigger** (done 2026-10-11, untested live): push to `main` -> `deploy.yml` -> vps `site-update.yml` (reference.md "Deploys"). Staging deploys not built.
 - **Reusable workflows in the wdk**: `check.yml` (`workflow_call`, `nix develop -c just check`, with Nix
   cache) done and shipped as a caller in each template. Missing: deploy-staging (push to `staging`), deploy-production (push to `main`, after tests pass). Projects
   keep three thin caller files.
 - ~~**Nix caching in CI**~~ done: `check.yml` uses magic-nix-cache. Cachix only if that proves flaky.
-- **Private-repo fetch** (decided 2026-10-11): one read-only `NIX_ACCESS_TOKEN` (README "Private repos"); wired into the vps workflows and `check.yml`. Creating the PAT is a one-time manual step.
+- **Private-repo fetch** (decided 2026-10-11): one read-only `NIX_ACCESS_TOKEN` (reference.md "Private repos"); wired into the vps workflows and `check.yml`. Creating the PAT is a one-time manual step.
 - **Deploy credentials:** which secret the project CI holds to dispatch to vps, scoped how.
 - **wdk releases:** tag → each project bumps `inputs.wdk`. Whether a bot opens those PRs, like the
   vps weekly flake update.
@@ -103,8 +103,8 @@ Also open: idempotency, i.e. re-running it on a half-bootstrapped project.
 
 ## Housekeeping
 
-- Sonda's `docs/perf.md` keeps its findings and the measurement traps; the traps move into the
-  wdk's README too, because they apply to every project. Done (README, traps 1–10).
+- Sonda's `docs/perf.md` keeps its findings and the measurement traps; the traps live in the
+  wdk's [`perf.md`](perf.md) too, because they apply to every project. Done (traps 1–10).
 - Releases are tagged from `main` (fast-forwarded from `web-kit`); the nix package version now
   follows `package.json`.
 
