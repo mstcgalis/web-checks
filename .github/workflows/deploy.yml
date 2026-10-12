@@ -10,6 +10,14 @@ on:
       rollback:
         type: boolean
         default: false
+      # Deploy to this `user@host` instead of `deploy.host` (staging).
+      host:
+        type: string
+        default: ''
+      # After the flip, `curl` this URL; a failure rolls back (a PHP fatal breaks every page).
+      url:
+        type: string
+        default: ''
     secrets:
       # Private half of the vps site's `deployKey`.
       DEPLOY_SSH_KEY:
@@ -44,6 +52,15 @@ jobs:
         env:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           DEPLOY_HOST_KEY: ${{ secrets.DEPLOY_HOST_KEY }}
-      - run: nix develop -c wdk deploy ${{ inputs.rollback && format('rollback --if-current {0}', github.sha) || '--no-build' }}
+      - run: nix develop -c wdk deploy ${{ inputs.rollback && format('rollback --if-current {0}', github.sha) || '--no-build' }}${{ inputs.host && format(' --host {0}', inputs.host) || '' }}
+        env:
+          NIX_CONFIG: ${{ secrets.NIX_ACCESS_TOKEN != '' && format('access-tokens = github.com={0}', secrets.NIX_ACCESS_TOKEN) || '' }}
+      - name: url check
+        if: ${{ inputs.url != '' && !inputs.rollback }}
+        run: |
+          curl -fsS --max-time 10 "${{ inputs.url }}" >/dev/null || {
+            nix develop -c wdk deploy rollback --if-current ${{ github.sha }}${{ inputs.host && format(' --host {0}', inputs.host) || '' }}
+            exit 1
+          }
         env:
           NIX_CONFIG: ${{ secrets.NIX_ACCESS_TOKEN != '' && format('access-tokens = github.com={0}', secrets.NIX_ACCESS_TOKEN) || '' }}

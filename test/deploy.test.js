@@ -126,3 +126,12 @@ test('an empty or failing manifest falls back to a full release', () => {
 	expect(deploy(bad, ['--no-build', '--host', 'x@h']).code).toBe(0);
 	expect(arg(bad)).toMatch(/^release [0-9a-f]{40}$/);
 });
+
+test('reusable deploy.yml takes host and url, and rolls back when the url check fails', () => {
+	const y = readFileSync(join(import.meta.dir, '..', '.github', 'workflows', 'deploy.yml'), 'utf8');
+	expect(y).toContain('host:');
+	expect(y).toContain('url:');
+	expect(y).toContain('--host {0}');
+	expect(y).toContain('curl -fsS --max-time 10 "${{ inputs.url }}"');
+	expect(y).toContain('rollback --if-current');
+});

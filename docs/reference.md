@@ -76,6 +76,7 @@ changed files (plus a delete list) as `tar | zstd | ssh` to the site's restricte
 there is no current release). The vps `site-release` forced command hardlinks the old release, applies
 the delta and flips: seconds even for a 140 MB site, no vps CI. If `check` then fails, a
 `rollback` job runs `wdk deploy rollback --if-current <sha>` (a no-op if a newer release landed).
+Optional inputs of the reusable `deploy.yml`: `host` (deploy to that `user@host`, e.g. staging) and `url` (curl it after the flip; a failure rolls back).
 
 - Config: `deploy: { host: 'SITE-deploy@HOST', dir: 'dist', build: 'just build' }` in `wdk.config.js`.
 - Secrets on the site repo: `DEPLOY_SSH_KEY` (private key), `DEPLOY_HOST_KEY` (`ssh-keyscan -t ed25519 HOST`
