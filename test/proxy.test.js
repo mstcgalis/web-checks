@@ -96,6 +96,13 @@ test('proxy: beacon POSTs are recorded', async () => {
 	expect(proxy.errors).toEqual([{ path: '/x', type: 'error', msg: 'boom' }]);
 });
 
+test('proxy: the load beacon records the path, not an error', async () => {
+	proxy.errors.length = 0;
+	expect((await get('/__wdk/beacon', { method: 'POST', body: JSON.stringify({ path: '/x', type: 'load', msg: '' }) })).status).toBe(204);
+	expect(proxy.loads).toContain('/x');
+	expect(proxy.errors).toEqual([]);
+});
+
 test('proxy: a dead upstream gives 502 and a proxy error', async () => {
 	const dead = startProxy({ origin: 'http://127.0.0.1:9' });
 	expect((await fetch(dead.url + '/')).status).toBe(502);

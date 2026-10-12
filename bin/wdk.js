@@ -1,12 +1,37 @@
 #!/usr/bin/env bun
 // wdk <command>: one file per command in lib/cmd/, each exporting run(args) → exit code.
-const COMMANDS = ['a11y', 'compat', 'smoke', 'shots', 'perf', 'load', 'serve-dir', 'install-browsers'];
+const HELP = `wdk <command> [options]
+
+checks: exit 0 pass, 1 findings, 2 broken setup
+  check              compat + smoke + a11y on one server: run after every change
+  compat             shipped CSS against compat.targets (caniuse)
+  smoke              every page × engine: runtime errors, console.error, broken requests
+  a11y               axe-core, WCAG 2.2 AA + best practice, every page
+
+reports: exit 0
+  load               cold load per page × viewport: LCP, image weight, heaviest files
+  shots              contact sheet of pages × engine × viewport, in .wdk/shots/
+  perf               CPU per perf knob (macOS)
+
+setup
+  doctor             what is missing, and the command that fixes it
+  install-browsers   the browsers your engines need (macOS; Linux: the dev shell)
+  serve-dir DIR PORT static server for a justfile's serve-at
+
+--engines a,b overrides the config's engines; --skip REGEX leaves pages out of the crawl.
+Config: wdk.config.js. Details: https://github.com/mstcgalis/web-dev-kit#readme`;
+
+const COMMANDS = ['check', 'a11y', 'compat', 'smoke', 'shots', 'perf', 'load', 'doctor', 'serve-dir', 'install-browsers'];
 const [cmd, ...args] = process.argv.slice(2);
+if (!cmd || ['help', '-h', '--help'].includes(cmd) || args.includes('--help') || args.includes('-h')) {
+	console.log(HELP);
+	process.exit(0);
+}
 if (!COMMANDS.includes(cmd)) {
-	console.error(`usage: wdk <${COMMANDS.join('|')}> [options] — see the web-dev-kit README`);
+	console.error(`wdk: unknown command "${cmd}"\n\n${HELP}`);
 	process.exit(2);
 }
-if (['a11y', 'smoke', 'shots', 'perf', 'load'].includes(cmd)) {
+if (['check', 'a11y', 'smoke', 'shots', 'perf', 'load', 'doctor'].includes(cmd)) {
 	const { linuxBrowsers, macFirefoxHome } = await import('../lib/browsers.js');
 	linuxBrowsers();
 	macFirefoxHome();
