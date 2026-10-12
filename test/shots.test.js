@@ -2,7 +2,7 @@ import { afterAll, expect, test } from 'bun:test';
 import { existsSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { chromium } from 'playwright';
-import { wdk, PROJECT } from './run.js';
+import { wdk, PROJECT, slow } from './run.js';
 
 // Full Chrome for Testing never exits from --screenshot (checked on 153, macOS);
 // Playwright's headless shell, a plain command-line Chromium, does.
@@ -11,7 +11,7 @@ const SHELL = join(shellDir, [...new Bun.Glob('*/chrome-headless-shell').scanSyn
 
 afterAll(() => rmSync(join(PROJECT, '.wdk'), { recursive: true, force: true }));
 
-test('shots writes a sheet: pages × (engine × viewport), exe engines included', () => {
+slow('shots writes a sheet: pages × (engine × viewport), exe engines included', () => {
 	const r = wdk(['shots', '--engines', 'chromium,exe:chrome:$WDK_TEST_CHROME'], { WDK_TEST_CHROME: SHELL });
 	expect(r.code).toBe(0);
 	const sheet = r.out.match(/sheet: (.+)/)[1].trim();

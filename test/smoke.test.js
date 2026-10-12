@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import { chromium } from 'playwright';
-import { wdk } from './run.js';
+import { wdk, slow } from './run.js';
 
 test('smoke fails on the runtime error and the missing image, not on the 404 start path', () => {
 	const r = wdk(['smoke']);
@@ -25,7 +25,7 @@ test('smoke exits 2 on invalid engine', () => {
 	expect(r.code).toBe(2);
 });
 
-test('exe engines report through the beacon and the proxy', () => {
+slow('exe engines report through the beacon and the proxy', () => {
 	const r = wdk(['smoke', '--engines', 'exe:chrome:$WDK_TEST_CHROME'], { WDK_TEST_CHROME: chromium.executablePath() });
 	expect(r.out).toMatch(/✗ exe:chrome:\$WDK_TEST_CHROME \/broken — error: .*boom/);
 	expect(r.out).toContain('✗ exe:chrome:$WDK_TEST_CHROME /broken — 404 /missing.png');

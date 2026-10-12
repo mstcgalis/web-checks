@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
-import { PROJECT, wdk } from './run.js';
+import { PROJECT, wdk, slow } from './run.js';
 
-test('load reports LCP and image bytes per page × viewport, the heaviest image named', () => {
+slow('load reports LCP and image bytes per page × viewport, the heaviest image named', () => {
 	const r = wdk(['load', '--skip', '^/about']);
 	expect(r.code).toBe(0);
 	expect(r.out).toMatch(/^\/$/m);
@@ -10,7 +10,7 @@ test('load reports LCP and image bytes per page × viewport, the heaviest image 
 	expect(r.out).toMatch(/\d+ KB {2}\/plasma\.jpg/);
 }, 120_000);
 
-test('load --cdn times each image via the edge and the origin, and flags what will not cache', async () => {
+slow('load --cdn times each image via the edge and the origin, and flags what will not cache', async () => {
 	// A fake Cloudflare edge: a fixed `cf-cache-status` per image, and one image marked no-store.
 	const jpg = await Bun.file(`${PROJECT}/site/plasma.jpg`).arrayBuffer();
 	const html = '<!doctype html><html lang="en"><title>t</title><h1>t</h1><img src="/good.jpg" alt="a"><img src="/bad.jpg" alt="b">';
@@ -63,7 +63,7 @@ async function loadAgainst(html, extra = []) {
 	}
 }
 
-test('load waits for a first paint that comes well after the load event', async () => {
+slow('load waits for a first paint that comes well after the load event', async () => {
 	// Nothing contentful until 1.5 s after load: a fixed wait after load read no LCP at all.
 	const out = await loadAgainst(
 		'<!doctype html><html lang="en"><title>t</title><script>addEventListener("load", () => setTimeout(() => document.body.insertAdjacentHTML("beforeend", "<h1>late</h1>"), 1500))</script><body></body>',
@@ -72,7 +72,7 @@ test('load waits for a first paint that comes well after the load event', async 
 	expect(out).toMatch(/390×844@3 4G {2}LCP \d{4} ms \(<h1> text\)/);
 }, 120_000);
 
-test('load scrolls to the very bottom, past stretches where a step does not move', async () => {
+slow('load scrolls to the very bottom, past stretches where a step does not move', async () => {
 	// An intro that locks scrolling for a second after load: the first wheel step does not move,
 	// which ended the old loop at the top. The lazy image sits under a page 30 screens tall.
 	const out = await loadAgainst(
@@ -82,7 +82,7 @@ test('load scrolls to the very bottom, past stretches where a step does not move
 	expect(out).toMatch(/1280×800@2 {2}LCP \d+ ms \(<h1> text\) {2}images 0 files 0 KB · after scroll 1 files/);
 }, 120_000);
 
-test('load --slow reports when a full-viewport hero arrives, which LCP leaves out', async () => {
+slow('load --slow reports when a full-viewport hero arrives, which LCP leaves out', async () => {
 	const out = await loadAgainst(
 		'<!doctype html><html lang="en"><title>t</title><body style="margin:0"><h1>t</h1><img src="/hero.jpg" alt="h" style="position:fixed;inset:0;width:100vw;height:100vh;z-index:-1"></body>',
 		['--slow'],
