@@ -71,8 +71,10 @@ The bootstrap CLI will set it with `gh secret set`.
 Release deploys: a site is a directory on the vps, `/srv/sites/<domain>/releases/<sha>/`, with a
 `current` symlink flipped atomically (5 releases kept). Push to `main`: the template's `deploy.yml` runs
 `check` and `deploy` in parallel (a hotfix never waits on browsers); `deploy.yml` runs `wdk deploy`, which
-builds (`deploy.build`), streams `deploy.dir` as `tar | zstd | ssh` to the site's restricted key, and
-the vps `site-release` forced command extracts and flips: seconds, no vps CI. If `check` then fails, a
+builds (`deploy.build`), asks the host for a hash manifest of the current release and streams only the
+changed files (plus a delete list) as `tar | zstd | ssh` to the site's restricted key (a full tar when
+there is no current release). The vps `site-release` forced command hardlinks the old release, applies
+the delta and flips: seconds even for a 140 MB site, no vps CI. If `check` then fails, a
 `rollback` job runs `wdk deploy rollback --if-current <sha>` (a no-op if a newer release landed).
 
 - Config: `deploy: { host: 'SITE-deploy@HOST', dir: 'dist', build: 'just build' }` in `wdk.config.js`.

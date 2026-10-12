@@ -6,7 +6,7 @@ piece that is decided or known but **not specced or built**, so nothing lives on
 
 **Deploy (modules 3 and 4) is redesigned:** [`2026-10-12-release-deploy-design.md`](superpowers/specs/2026-10-12-release-deploy-design.md) supersedes the `store` kinds below (too slow).
 
-**Phase 1 of the release deploys is built** (`wdk deploy`, reusable `deploy.yml`, vps `site-release` + `deployKey`); proven on iloweit.sk 2026-10-12: local `wdk deploy` 3.8s (build included), CI push-to-live 73s on a cold cache, rollback verified. The dispatch trigger and staging-input work below are superseded.
+**Phase 1 of the release deploys is built** (`wdk deploy`, reusable `deploy.yml`, vps `site-release` + `deployKey`); proven on iloweit.sk 2026-10-12: local `wdk deploy` 3.8s (build included), CI push-to-live 73s on a cold cache, rollback verified. dgalis.sk (140 MB) moved the same day: a full upload took 54 s, so deploys send only changed files now (unchanged redeploy 8.6 s locally; CI push-to-live ~95 s on a cold cache, deploy step 6 s). The dispatch trigger and staging-input work below are superseded.
 
 Specced so far: [`2026-10-05-kit-contract-and-checks-design.md`](superpowers/specs/2026-10-05-kit-contract-and-checks-design.md)
 (module 0, thin, and module 1).
