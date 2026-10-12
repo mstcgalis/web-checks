@@ -9,7 +9,8 @@ shells per stack. Part of a larger system for delivering sites; see [`docs/roadm
 nix flake init -t github:mstcgalis/web-dev-kit#static   # or kirby, eleventy, vite, astro
 ```
 
-Each template is a flake, a `justfile` (`serve-at`, `build`, `check`), a `wdk.config.js` and a
+Each template is a flake, a `justfile` (`serve-at`, `build`, `check`), a `wdk.config.js`, an `.envrc`
+(`direnv allow` once: the dev shell then loads on `cd`, and no command pays for `nix develop`) and a
 starter page. `static` serves `site/`; `eleventy` builds `src/` to `_site/` with Eleventy; `vite` builds to `dist/` with Vite; `astro` builds to `dist/` with Astro;
 `kirby` expects Kirby in `./kirby` (git submodule) and serves it with `php -S`.
 
@@ -18,7 +19,7 @@ starter page. `static` serves `site/`; `eleventy` builds `src/` to `_site/` with
 ```nix
 # flake.nix
 {
-  inputs.wdk.url = "github:mstcgalis/web-dev-kit/v0.8.0";
+  inputs.wdk.url = "github:mstcgalis/web-dev-kit"; # pinned by flake.lock; `nix flake update wdk` to upgrade
   inputs.nixpkgs.follows = "wdk/nixpkgs";
   outputs = { wdk, nixpkgs, ... }: {
     devShells = nixpkgs.lib.genAttrs [ "aarch64-darwin" "x86_64-linux" ] (system: {
@@ -31,17 +32,23 @@ starter page. `static` serves `site/`; `eleventy` builds `src/` to `_site/` with
 The project's `justfile` must have **`serve-at PORT`**: a foreground server on PORT. Every command
 starts the site through it. Static sites use `wdk serve-dir DIR {{PORT}}`.
 
-On macOS, run `wdk install-browsers` once. On Linux the dev shell provides the browsers.
+Browsers: on Linux the dev shell provides them. On macOS, `wdk install-browsers` downloads only what
+the configured engines need and is not on disk; with Google Chrome installed, the default config
+needs nothing (Chrome stands in for Playwright's Chromium). `wdk doctor` lists what is missing and the fix.
 
 ## Commands
 
+Run `wdk` for the list. Exit codes: 0 pass, 1 findings, 2 broken setup (the message says the fix).
+
 | | | Exit |
 |---|---|---|
+| `wdk check` | `compat`, `smoke` and `a11y` on one server and one crawl, side by side: the command to run after every change. A missing `compat.css` skips compat | 1 on any finding |
 | `wdk a11y` | axe-core, WCAG 2.2 AA + best practice, every crawled page | 1 on violations |
 | `wdk compat` | `compat.css` against `compat.targets` (browserslist), via doiuse | 1 on findings, 2 if globs match nothing |
 | `wdk smoke` | every page × engine; runtime errors, `console.error`, broken same-origin requests | 1 on errors |
 | `wdk shots` | contact sheet at `.wdk/shots/…/index.html`: pages × engine × viewport | 0 |
 | `wdk perf` | CPU per perf knob, idle and mouse; macOS only (see traps below) | 0 |
+| `wdk doctor` | config, engines' browsers, `compat.css` globs, the `serve-at` recipe answering; one line each, with the fix | 1 if anything is missing |
 | `wdk load` | every page cold (no HTTP cache) per viewport: LCP, when the largest image in view arrived (Chrome leaves full-viewport ones out of LCP), image KB on load and after scrolling, heaviest files; phone viewports as 3× on 4G; `--url ORIGIN` for a deployed site, `--top N`; `--slow` for Lighthouse's slow mobile (1.6 Mbit/s, 150 ms, 4× CPU) on every viewport; `--cdn` adds each image's `cf-cache-status`, edge vs origin time, and flags what will not cache | 0 |
 
 `--engines a,b` overrides the config for `smoke`, `shots` and `perf`; `--skip REGEX` for the crawl.
@@ -84,7 +91,8 @@ Each of these produced confident, wrong numbers once:
 
 ## Develop
 
-`nix develop`, then `bun install`, then `just check`. After changing `bun.lock`, run `just hash` and
+`nix develop`, then `bun install`, then `just check` (fast, before every commit) or `just check-all`
+(every test, as CI runs them). After changing `bun.lock`, run `just hash` and
 update `outputHash` in `flake.nix`.
 
 ## Private repos
@@ -106,7 +114,8 @@ needs one secret, `NIX_ACCESS_TOKEN`, which for this must also have Actions read
 
 Projects: `staging` deploys staging, `main` deploys production; both fast-forward only, conventional
 commits. The wdk itself: work on `web-kit`, fast-forward `main`, tag `vX.Y.Z` from `main` (semver;
-`package.json` is the version source). Projects bump `inputs.wdk` to the tag.
+`package.json` is the version source). Then `just lock-templates` and commit, so new projects start on
+this release. Projects run `nix flake update wdk`.
 
 ## Licence
 
