@@ -68,14 +68,18 @@ The bootstrap CLI will set it with `gh secret set`.
 
 ## Deploys
 
-A site is a flake input of the vps repo. Push to `main`: the site's `deploy.yml` runs `check.yml`, then
-the reusable `deploy.yml` dispatches the vps repo's `site-update.yml`, which bumps that input, builds
-the site, merges the lock bump and dispatches the deploy (Playground canary, then Production). The
-site repo needs one secret, `NIX_ACCESS_TOKEN`, with Actions read and write. Staging is opt-in: set
-`services.sites.<name>.staging = true` and `stagingRoot` in vps (a second flake input on the
-project's `staging` branch, named `<input>-staging`), add `staging` to the site's `deploy.yml`
-branches, and add a `staging.<domain>` DNS record. A push to `staging` then bumps `<input>-staging`;
-`staging.<domain>` is served with `X-Robots-Tag: noindex`. Kirby sites are stateful and not covered yet.
+Release deploys: a site is a directory on the vps, `/srv/sites/<domain>/releases/<sha>/`, with a
+`current` symlink flipped atomically (5 releases kept). Push to `main`: the template's `deploy.yml` runs
+`check` and `deploy` in parallel (a hotfix never waits on browsers); `deploy.yml` runs `wdk deploy`, which
+builds (`deploy.build`), streams `deploy.dir` as `tar | zstd | ssh` to the site's restricted key, and
+the vps `site-release` forced command extracts and flips: seconds, no vps CI. If `check` then fails, a
+`rollback` job runs `wdk deploy rollback --if-current <sha>` (a no-op if a newer release landed).
+
+- Config: `deploy: { host: 'SITE-deploy@HOST', dir: 'dist', build: 'just build' }` in `wdk.config.js`.
+- Secrets on the site repo: `DEPLOY_SSH_KEY` (private key), `DEPLOY_HOST_KEY` (`ssh-keyscan -t ed25519 HOST`
+  line, pinned). vps: `services.sites.<name>.deployKey` = the public half (user `<slug>-deploy`, `restrict`).
+- By hand: `wdk deploy`, `wdk deploy rollback`, `wdk deploy list`.
+- Not built yet: Kirby (`shared/` state), staging entries. Kirby sites keep their pull deploy.
 
 ## Branches and releases
 

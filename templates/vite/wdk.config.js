@@ -3,4 +3,5 @@ export default {
 	engines: { ci: ['chromium', 'firefox', 'webkit'], local: ['chrome', 'firefox', 'webkit'] },
 	viewports: [[390, 844], [1440, 900]],
 	compat: { css: ['src/*.css'], targets: 'defaults', allow: [] },
+	// deploy: { host: 'SITE-deploy@HOST', dir: 'dist' }, // see docs/reference.md#deploys
 };

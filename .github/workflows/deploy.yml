@@ -1,25 +1,44 @@
-# Reusable: a site calls this after its checks pass on main, with
-# `uses: mstcgalis/web-dev-kit/.github/workflows/deploy.yml@vX.Y.Z`. It asks the vps repo to bump
-# the site's flake input and deploy (vps .github/workflows/site-update.yml). Called from the
-# `staging` branch it bumps `<input>-staging` instead (the vps site's `staging = true` opt-in).
+# Reusable: a site calls this after pushing to main, with
+# `uses: mstcgalis/web-dev-kit/.github/workflows/deploy.yml@vX.Y.Z`. It runs `wdk deploy`: the built
+# site streams to the host's restricted deploy key (vps `site-release`), seconds, no vps CI involved.
+# `rollback: true` runs `wdk deploy rollback --if-current <this sha>` (a failed check after deploy).
+# Needs `deploy.host` in wdk.config.js.
 name: deploy
 on:
   workflow_call:
     inputs:
-      # The site's input name in the vps flake; defaults to the repo name.
-      input:
-        type: string
-        default: ""
+      rollback:
+        type: boolean
+        default: false
     secrets:
-      # The one fine-grained PAT: Contents read (Nix fetches) plus Actions read and write (dispatch on the vps repo).
-      NIX_ACCESS_TOKEN:
+      # Private half of the vps site's `deployKey`.
+      DEPLOY_SSH_KEY:
         required: true
-permissions: {}
+      # A pinned `ssh-keyscan -t ed25519 HOST` line: no trust on first use.
+      DEPLOY_HOST_KEY:
+        required: true
+      # Read-only GitHub token so Nix can fetch private flake inputs (the wdk, sibling repos).
+      NIX_ACCESS_TOKEN:
+        required: false
+permissions:
+  contents: read
 jobs:
-  dispatch:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - run: gh workflow run site-update.yml -R mstcgalis/vps --ref main -f input="$INPUT"
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: DeterminateSystems/determinate-nix-action@d0c908e6cbe9f89f36ed8205a3ab6f092636916a # v3
+      - uses: DeterminateSystems/magic-nix-cache-action@565684385bcd71bad329742eefe8d12f2e765b39 # v13
+      - name: ssh key
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          printf '%s\n' "$DEPLOY_HOST_KEY" > ~/.ssh/known_hosts
+          printf 'Host *\n  IdentityFile ~/.ssh/id_deploy\n  IdentitiesOnly yes\n  StrictHostKeyChecking yes\n' > ~/.ssh/config
         env:
-          GH_TOKEN: ${{ secrets.NIX_ACCESS_TOKEN }}
-          INPUT: ${{ inputs.input != '' && inputs.input || github.event.repository.name }}${{ github.ref_name == 'staging' && '-staging' || '' }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_HOST_KEY: ${{ secrets.DEPLOY_HOST_KEY }}
+      - run: nix develop -c wdk deploy ${{ inputs.rollback && format('rollback --if-current {0}', github.sha) || '' }}
+        env:
+          NIX_CONFIG: ${{ secrets.NIX_ACCESS_TOKEN != '' && format('access-tokens = github.com={0}', secrets.NIX_ACCESS_TOKEN) || '' }}

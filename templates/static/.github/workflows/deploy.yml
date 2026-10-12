@@ -1,6 +1,6 @@
 name: deploy
-# Push to main: check, then ask the vps repo to bump this site's input and deploy.
-# Staging is opt-in: add `staging` to branches once the vps site has `staging = true`.
+# Push to main: check and deploy in parallel (a hotfix never waits on browsers); a failed check rolls back.
+# Needs secrets DEPLOY_SSH_KEY and DEPLOY_HOST_KEY, and deploy.host in wdk.config.js.
 on:
   push:
     branches: [main]
@@ -10,7 +10,12 @@ jobs:
     secrets:
       NIX_ACCESS_TOKEN: ${{ secrets.NIX_ACCESS_TOKEN }}
   deploy:
-    needs: check
     uses: mstcgalis/web-dev-kit/.github/workflows/deploy.yml@v0.10.2
-    secrets:
-      NIX_ACCESS_TOKEN: ${{ secrets.NIX_ACCESS_TOKEN }}
+    secrets: inherit
+  rollback:
+    needs: [check, deploy]
+    if: failure() && needs.deploy.result == 'success' && needs.check.result == 'failure'
+    uses: mstcgalis/web-dev-kit/.github/workflows/deploy.yml@v0.10.2
+    with:
+      rollback: true
+    secrets: inherit
