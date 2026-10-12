@@ -22,3 +22,8 @@ accessibility, performance and compatibility. Every change serves that goal.
 - `just check` (bun test) must pass before every commit.
 - Conventional commits, one concern per commit. Work on `web-kit`, fast-forward `main`, tag from `main`.
 - After changing `bun.lock`, run `just hash` and update `outputHash` in `flake.nix`.
+
+## Docs
+
+[`README.md`](README.md) says what wdk is; [`docs/reference.md`](docs/reference.md) has config, wiring and
+releases; [`docs/roadmap.md`](docs/roadmap.md) lists what is not built.
