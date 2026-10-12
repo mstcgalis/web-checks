@@ -46,10 +46,13 @@ Missing:
   secrets via sops-nix, Umami site id.
 - **Three deploy kinds:**
   - `store`: the build output is a Nix store path, served read-only. The target for static sites.
-  - `store + state`: code in the store, mutable paths (`content/`, `media/`, sessions) in
-    `/var/lib/<site>`, symlinked or configured. The target for sonda. Needs a migration from
-    today's `git pull` deploy with zero content loss.
-  - `pull` (today's sonda) and `rsync` (today's dgalis.sk): kept until each site moves.
+  - `store + state`: code in the store, mutable paths in `/var/lib/<site>`. **Not for sonda (decided
+    2026-10-12):** a deploy goes from ~20s to minutes (flake bump, build, vps CI, switch) and a hotfix then
+    waits on the vps pipeline; speed is never traded away. Reviewed design notes if it is ever revisited:
+    custom Kirby roots via `index.php` (symlinks break on PHP `__DIR__`), content-hash asset `?v=` (store
+    mtimes are 1), composer as a fixed-output derivation (`kirby/` is outside `vendor/`), gate weekly
+    flake updates on the site's tests.
+  - `pull` (today's sonda; stays, hardened: code read-only to the PHP pool, see below) and `rsync` (today's dgalis.sk): kept until each site moves.
 - **Who triggers a deploy.** The project CI either dispatches to the vps repo, which bumps the lock
   and runs its existing CI apply, or the vps repo polls. The vps repo already has CI apply (D18) and a
   weekly flake-update job, so dispatch → lock-bump PR → auto-merge for staging is the likely shape.
