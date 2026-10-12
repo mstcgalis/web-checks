@@ -2,7 +2,7 @@ name: check
 on: [push, pull_request]
 jobs:
   check:
-    uses: mstcgalis/web-dev-kit/.github/workflows/check.yml@v0.9.1
+    uses: mstcgalis/web-dev-kit/.github/workflows/check.yml@v0.10.0
     with:
       submodules: true
     secrets:
