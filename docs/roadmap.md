@@ -4,6 +4,8 @@ The end goal is one CLI that takes a website from first prompt to deployed (stac
 VPS, CI) in minutes. It is built from scripts, not around any one agent. This file tracks every
 piece that is decided or known but **not specced or built**, so nothing lives only in a chat log.
 
+**Deploy (modules 3 and 4) is redesigned:** [`2026-10-12-release-deploy-design.md`](superpowers/specs/2026-10-12-release-deploy-design.md) supersedes the `store` kinds below (too slow).
+
 Specced so far: [`2026-10-05-kit-contract-and-checks-design.md`](superpowers/specs/2026-10-05-kit-contract-and-checks-design.md)
 (module 0, thin, and module 1).
 
