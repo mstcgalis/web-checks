@@ -7,19 +7,20 @@ const WDK = join(import.meta.dir, '..', 'bin', 'wdk.js');
 const SHA_RE = /^[0-9a-f]{40}$/;
 
 // A git project with dist/index.html, plus a stub `ssh` that records its last argument and the tar it was fed.
-function setup({ config = '', git = true, dist = true, sshExit = 0 } = {}) {
+function setup({ config = '', git = true, dist = true, sshExit = 0, manifestExit = 0, manifest = '' } = {}) {
 	const dir = mkdtempSync(join(tmpdir(), 'wdk-deploy-'));
 	if (dist) {
 		mkdirSync(join(dir, 'dist'));
 		writeFileSync(join(dir, 'dist', 'index.html'), 'hi');
 	}
+	if (manifest) writeFileSync(join(dir, 'manifest-out'), manifest);
 	writeFileSync(join(dir, 'wdk.config.js'), `export default ${config || '{}'};`);
 	if (git) {
 		for (const c of [['init', '-q'], ['add', '-A'], ['-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'x']]) Bun.spawnSync(['git', ...c], { cwd: dir });
 	}
 	const bin = join(dir, 'bin');
 	mkdirSync(bin);
-	writeFileSync(join(bin, 'ssh'), `#!/bin/sh\nfor a; do last="$a"; done\necho "$last" > "${dir}/ssh-arg"\necho "released (stub)"\nzstd -dc | tar -t > "${dir}/ssh-tar" 2>/dev/null\nexit ${sshExit}\n`);
+	writeFileSync(join(bin, 'ssh'), `#!/bin/sh\nfor a; do last="$a"; done\n[ "$last" = manifest ] && { cat "${dir}/manifest-out" 2>/dev/null; exit ${manifestExit}; }\necho "$last" > "${dir}/ssh-arg"\necho "released (stub)"\nzstd -dc | tar -t > "${dir}/ssh-tar" 2>/dev/null\nexit ${sshExit}\n`);
 	chmodSync(join(bin, 'ssh'), 0o755);
 	return { dir, bin };
 }
@@ -97,4 +98,31 @@ test('--build-only builds and stops: no host needed, no upload', () => {
 	expect(r.code).toBe(0);
 	expect(existsSync(join(s.dir, 'built'))).toBe(true);
 	expect(existsSync(join(s.dir, 'ssh-arg'))).toBe(false);
+});
+
+const sha256 = (t) => new Bun.CryptoHasher('sha256').update(t).digest('hex');
+
+test('with a remote manifest, only changed files travel and the remote command is --delta', () => {
+	const s = setup({ manifest: `${sha256('hi')}  ./index.html\n${sha256('same')}  ./keep.txt\n${sha256('gone')}  ./old.txt\n` });
+	writeFileSync(join(s.dir, 'dist', 'keep.txt'), 'same');
+	writeFileSync(join(s.dir, 'dist', 'new.txt'), 'new');
+	const r = deploy(s, ['--no-build', '--host', 'x@h']);
+	expect(r.err).toBe('');
+	expect(r.code).toBe(0);
+	expect(arg(s)).toMatch(/^release [0-9a-f]{40} --delta$/);
+	const tar = readFileSync(join(s.dir, 'ssh-tar'), 'utf8');
+	expect(tar).toContain('new.txt');
+	expect(tar).toContain('.wdk-delete');
+	expect(tar).not.toContain('index.html');
+	expect(tar).not.toContain('keep.txt');
+	expect(r.out).toContain('1 changed, 1 removed');
+});
+
+test('an empty or failing manifest falls back to a full release', () => {
+	const none = setup();
+	expect(deploy(none, ['--no-build', '--host', 'x@h']).code).toBe(0);
+	expect(arg(none)).toMatch(/^release [0-9a-f]{40}$/);
+	const bad = setup({ manifest: 'junk', manifestExit: 255 });
+	expect(deploy(bad, ['--no-build', '--host', 'x@h']).code).toBe(0);
+	expect(arg(bad)).toMatch(/^release [0-9a-f]{40}$/);
 });
