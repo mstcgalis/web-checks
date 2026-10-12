@@ -29,6 +29,11 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: DeterminateSystems/determinate-nix-action@d0c908e6cbe9f89f36ed8205a3ab6f092636916a # v3
       - uses: DeterminateSystems/magic-nix-cache-action@565684385bcd71bad329742eefe8d12f2e765b39 # v13
+      # Project code runs here, before the deploy key exists on the runner.
+      - run: nix develop -c wdk deploy --build-only
+        if: ${{ !inputs.rollback }}
+        env:
+          NIX_CONFIG: ${{ secrets.NIX_ACCESS_TOKEN != '' && format('access-tokens = github.com={0}', secrets.NIX_ACCESS_TOKEN) || '' }}
       - name: ssh key
         run: |
           install -d -m 700 ~/.ssh
@@ -39,6 +44,6 @@ jobs:
         env:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           DEPLOY_HOST_KEY: ${{ secrets.DEPLOY_HOST_KEY }}
-      - run: nix develop -c wdk deploy ${{ inputs.rollback && format('rollback --if-current {0}', github.sha) || '' }}
+      - run: nix develop -c wdk deploy ${{ inputs.rollback && format('rollback --if-current {0}', github.sha) || '--no-build' }}
         env:
           NIX_CONFIG: ${{ secrets.NIX_ACCESS_TOKEN != '' && format('access-tokens = github.com={0}', secrets.NIX_ACCESS_TOKEN) || '' }}

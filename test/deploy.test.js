@@ -90,3 +90,11 @@ test('a failing build stops before any upload, exit 2', () => {
 	expect(r.code).toBe(2);
 	expect(existsSync(join(s.dir, 'ssh-arg'))).toBe(false);
 });
+
+test('--build-only builds and stops: no host needed, no upload', () => {
+	const s = setup({ config: `{ deploy: { build: 'touch built' } }` });
+	const r = deploy(s, ['--build-only']);
+	expect(r.code).toBe(0);
+	expect(existsSync(join(s.dir, 'built'))).toBe(true);
+	expect(existsSync(join(s.dir, 'ssh-arg'))).toBe(false);
+});
