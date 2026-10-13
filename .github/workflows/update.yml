@@ -5,7 +5,8 @@ name: update
 on:
   workflow_call:
     secrets:
-      # Fine-grained PAT on the project: Contents and Pull requests read and write (plus Contents
+      # Fine-grained PAT on the project: Contents, Pull requests and Workflows read and write (Workflows: the
+      # bump edits workflow pins, and GitHub refuses that push without it; plus Contents
       # read on the wdk). A PR from GITHUB_TOKEN would not start the project's checks; this one does.
       NIX_ACCESS_TOKEN:
         required: true

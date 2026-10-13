@@ -1,5 +1,5 @@
 name: update
-# Weekly: open a PR when the wdk has a new release. Needs NIX_ACCESS_TOKEN with Contents and Pull requests write.
+# Weekly: open a PR when the wdk has a new release. Needs NIX_ACCESS_TOKEN with Contents, Pull requests and Workflows write.
 on:
   schedule:
     - cron: "17 5 * * 1"

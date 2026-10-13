@@ -89,7 +89,7 @@ Optional inputs of the reusable `deploy.yml`: `host` (deploy to that `user@host`
 Projects: `staging` deploys staging, `main` deploys production; both fast-forward only, conventional
 commits. The wdk itself: work on `web-kit`, fast-forward `main`, tag `vX.Y.Z` from `main`
 (`package.json` is the version source). Then `just lock-templates` and commit, so new projects start
-on this release. Projects run `wdk update` (workflow pins and `flake.lock` to the latest release; nothing committed). Each template ships `update.yml`: weekly, it runs that and opens a PR; it needs `NIX_ACCESS_TOKEN` with Contents and Pull requests write on the project. After changing `bun.lock`, run `just hash` and
+on this release. Projects run `wdk update` (workflow pins and `flake.lock` to the latest release; nothing committed). Each template ships `update.yml`: weekly, it runs that and opens a PR; it needs `NIX_ACCESS_TOKEN` with Contents, Pull requests and Workflows write on the project (the bump edits workflow files). After changing `bun.lock`, run `just hash` and
 update `outputHash` in `flake.nix`.
 
 `just check` is the fast suite (before every commit); `just check-all` runs every test, as CI does.
