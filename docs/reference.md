@@ -82,7 +82,7 @@ Optional inputs of the reusable `deploy.yml`: `host` (deploy to that `user@host`
 - Secrets on the site repo: `DEPLOY_SSH_KEY` (private key), `DEPLOY_HOST_KEY` (`ssh-keyscan -t ed25519 HOST`
   line, pinned). vps: `services.sites.<name>.deployKey` = the public half (user `<slug>-deploy`, `restrict`).
 - By hand: `wdk deploy`, `wdk deploy rollback`, `wdk deploy list`.
-- Not built yet: Kirby (`shared/` state), staging entries. Kirby sites keep their pull deploy.
+- Kirby sites (`kind = "kirby"`, sonda-web production and staging) keep mutable state in `shared/`, set by the PHP-FPM pool's `KIRBY_SHARED`; releases are read-only code. Not built yet: the wdk Kirby template (deploy config, build recipe, asset hash helper, roots).
 
 ## Branches and releases
 

@@ -46,10 +46,10 @@ stateless); sonda follows once that path is proven.
 Missing:
 
 - **One `site.nix`** (done 2026-10-12): every site is a release-deploy entry (domain, www redirect, vhost, deploy user, key).
-  Built: static sites (iloweit.sk, dgalis.sk). Not built: Kirby kind (`shared/` state, PHP-FPM pool, content-hash asset `?v=`,
-  composer), staging entries, sops secrets. Sonda stays on `git pull` until it moves; then delete its pull key.
+  Built: static sites (iloweit.sk, dgalis.sk) and the Kirby kind (sonda-web production + staging, 2026-10-13). Not built: the Kirby template, sops secrets.
+  Delete sonda's old pull users, keys and `/srv/sonda-web*` after 2026-10-19.
   `store`/`store + state`/`rsync` kinds are gone (too slow).
-- **Staging per site** (done 2026-10-12 for `store` sites, untested live; no site has opted in): see reference.md "Deploys". Sonda's staging is still `git pull`.
+- **Staging per site** (done 2026-10-12 for `store` sites, untested live; no site has opted in): see reference.md "Deploys". Sonda's staging is a Kirby entry (2026-10-13).
 - **Content sync** (`content.just`, `docs/server-contract.md` §11 in sonda) generalised for stateful
   stacks: pull-first, dry-run, path-scoped push, merge-only.
 - **DNS** through `tofu/dns` in vps: one record set per site from the same site entry.
