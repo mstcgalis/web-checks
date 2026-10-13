@@ -20,7 +20,6 @@ jobs:
         with:
           submodules: ${{ inputs.submodules }}
       - uses: DeterminateSystems/determinate-nix-action@d0c908e6cbe9f89f36ed8205a3ab6f092636916a # v3
-      - uses: DeterminateSystems/magic-nix-cache-action@565684385bcd71bad329742eefe8d12f2e765b39 # v13
       # The token reaches only this step, and only when the secret is set.
       - run: nix develop -c just check
         env:

@@ -8,7 +8,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/determinate-nix-action@v3
-      - uses: DeterminateSystems/magic-nix-cache-action@v13
+      # No magic-nix-cache: cache.nixos.org serves these paths as fast, and its per-path uploads hit the
+      # Actions cache rate limit and 10 GB cap (a 12-minute post step). Measured 2026-10-13: 3m19s vs 3m44s+.
       - run: nix flake check
       - run: nix build .#wdk
       - run: nix develop -c sh -c 'bun install --frozen-lockfile && bun test'

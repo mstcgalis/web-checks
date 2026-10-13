@@ -52,8 +52,6 @@ jobs:
           ref: ${{ inputs.ref || github.sha }}
       - uses: DeterminateSystems/determinate-nix-action@d0c908e6cbe9f89f36ed8205a3ab6f092636916a # v3
         if: steps.gate.outputs.keyed == 'true'
-      - uses: DeterminateSystems/magic-nix-cache-action@565684385bcd71bad329742eefe8d12f2e765b39 # v13
-        if: steps.gate.outputs.keyed == 'true'
       # Project code runs here, before the deploy key exists on the runner.
       - run: nix develop -c wdk deploy --build-only
         if: ${{ steps.gate.outputs.keyed == 'true' && !inputs.rollback }}
