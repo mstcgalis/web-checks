@@ -47,7 +47,7 @@ Missing:
 
 - **One `site.nix`** (done 2026-10-12): every site is a release-deploy entry (domain, www redirect, vhost, deploy user, key).
   Built: static sites (iloweit.sk, dgalis.sk) and the Kirby kind (sonda-web production + staging, 2026-10-13). Kirby template built (2026-10-13). Not built: sops secrets.
-  Delete sonda's old pull users, keys and `/srv/sonda-web*` after 2026-10-19.
+  Sonda's old git-pull deploy (users, keys, `/srv/sonda-web*`) removed 2026-10-13.
   `store`/`store + state`/`rsync` kinds are gone (too slow).
 - **Staging per site** (done 2026-10-12 for `store` sites, untested live; no site has opted in): see reference.md "Deploys". Sonda's staging is a Kirby entry (2026-10-13).
 - **Content sync** (`content.just`, `docs/server-contract.md` §11 in sonda) generalised for stateful
