@@ -16,6 +16,12 @@ const sh = (args, cwd) => {
 	const r = Bun.spawnSync(args, { cwd, env });
 	return { code: r.exitCode, out: r.stdout.toString(), err: r.stderr.toString() };
 };
+// Fails with the command's stderr, not a bare exit code.
+const ok = (args, cwd) => {
+	const r = sh(args, cwd);
+	expect(r.code ? `${args.join(' ')} exited ${r.code}: ${r.err}` : '').toBe('');
+	return r;
+};
 
 function project(name) {
 	const dir = mkdtempSync(join(tmpdir(), `wdk-tpl-${name}-`));
@@ -27,8 +33,8 @@ for (const name of ['static', 'eleventy', 'vite', 'astro']) {
 	slow(`template ${name}: wdk check passes`, () => {
 		const dir = project(name);
 		if (name !== 'static') {
-			expect(sh(['bun', 'install', '--frozen-lockfile'], dir).code).toBe(0);
-			expect(sh(['just', 'build'], dir).code).toBe(0);
+			ok(['bun', 'install', '--frozen-lockfile'], dir);
+			ok(['just', 'build'], dir);
 		}
 		const check = sh(['wdk', 'check', '--engines', 'chromium'], dir);
 		expect(check.out).toContain('✓ smoke ');
