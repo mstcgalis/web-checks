@@ -22,7 +22,10 @@ case "$1 $2" in
   "secret set") cat > "${root}/secrets/$3" ;;
 esac
 `);
-	writeFileSync(join(bin, 'ssh-keyscan'), '#!/bin/sh\necho "# comment"\necho "$3 ssh-ed25519 AAAAhostkey"\n');
+	Bun.spawnSync(['ssh-keygen', '-q', '-t', 'ed25519', '-N', '', '-f', join(root, 'hostkey')]);
+	const hostkey = readFileSync(join(root, 'hostkey.pub'), 'utf8').split(' ').slice(0, 2).join(' ');
+	writeFileSync(join(root, 'hostkey.line'), hostkey);
+	writeFileSync(join(bin, 'ssh-keyscan'), `#!/bin/sh\necho "# comment"\necho "$3 $(cat '${root}/hostkey.line')"\n`);
 	for (const f of ['gh', 'ssh-keyscan']) chmodSync(join(bin, f), 0o755);
 	return root;
 }
@@ -48,7 +51,8 @@ test('new: template pinned to this wdk, committed, on GitHub, secrets set, deplo
 	expect(readFileSync(join(root, 'gh.log'), 'utf8')).toContain('repo create site --private');
 	const secret = (n) => readFileSync(join(root, 'secrets', n), 'utf8');
 	expect(secret('NIX_ACCESS_TOKEN')).toBe('tok');
-	expect(secret('DEPLOY_HOST_KEY')).toBe('vps.test ssh-ed25519 AAAAhostkey');
+	expect(secret('DEPLOY_HOST_KEY')).toBe(`vps.test ${readFileSync(join(root, 'hostkey.line'), 'utf8')}`);
+	expect(r.out).toMatch(/host key: 256 SHA256:\S+ .*not in ~\/.ssh\/known_hosts/);
 	expect(secret('DEPLOY_SSH_KEY')).toContain('OPENSSH PRIVATE KEY');
 	expect(r.out).toContain('services.sites."example.com" = {\n    deployKey = "ssh-ed25519 ');
 	expect(Bun.spawnSync(['git', 'rev-parse', 'main'], { cwd: join(root, 'remote.git') }).stdout.toString()).toBe(Bun.spawnSync(['git', 'rev-parse', 'HEAD'], { cwd: dir }).stdout.toString());
@@ -90,4 +94,19 @@ test('new reads the token Nix already uses from nix.conf', () => {
 	writeFileSync(join(root, '.config', 'nix', 'nix.conf'), 'access-tokens = github.com=fromconf\n');
 	expect(wdkNew(root, ['static', 'site']).code).toBe(0);
 	expect(readFileSync(join(root, 'secrets', 'NIX_ACCESS_TOKEN'), 'utf8')).toBe('fromconf');
+});
+
+test('new pins the host key only if it matches the one in ~/.ssh/known_hosts', () => {
+	const root = setup();
+	mkdirSync(join(root, '.ssh'));
+	const args = ['static', 'site', '--domain', 'example.com', '--vps', 'vps.test'];
+	writeFileSync(join(root, '.ssh', 'known_hosts'), 'vps.test ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOtherKeyOtherKeyOtherKeyOtherKeyOtherKey\n');
+	const bad = wdkNew(root, args);
+	expect(bad.code).toBe(2);
+	expect(bad.err).toContain('different ed25519 key');
+	expect(existsSync(join(root, 'secrets', 'DEPLOY_HOST_KEY'))).toBe(false);
+	writeFileSync(join(root, '.ssh', 'known_hosts'), `vps.test ${readFileSync(join(root, 'hostkey.line'), 'utf8')}\n`);
+	const good = wdkNew(root, args);
+	expect(good.err).toBe('');
+	expect(good.out).toContain('host key: matches ~/.ssh/known_hosts');
 });

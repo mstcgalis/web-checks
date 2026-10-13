@@ -109,7 +109,7 @@ Staging and production: `staging` deploys with `host` set to the staging user; p
 commit ships.
 
 `wdk new STACK DIR --domain D --vps HOST` does the site side: a fresh key into the repo secrets, the
-pinned host key, `deploy.host` = `<domain with - for .>-deploy@HOST`, and prints the
+host key (must match `~/.ssh/known_hosts` if it is there; else its fingerprint is printed), `deploy.host` = `<domain with - for .>-deploy@HOST`, and prints the
 `services.sites."D"` entry to add on the vps. The private key exists only in the secret.
 
 By hand: `wdk deploy` (`--no-build`, `--build-only`, `--host`), `wdk deploy rollback`, `wdk deploy list`.
