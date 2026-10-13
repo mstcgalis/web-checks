@@ -29,6 +29,22 @@ works the minute you `cd` into it.
 
 Every command exits `0` pass, `1` findings, `2` broken setup, so it drops into CI or an agent loop unchanged.
 
+## How `wdk check` works
+
+```mermaid
+flowchart LR
+  serve["just serve-at PORT<br/>(any stack)"] --> crawl[crawl from pages.start]
+  serve --> proxy["proxy<br/>error beacon, blocks"]
+  crawl --> a11y["a11y<br/>axe-core"]
+  crawl --> smoke["smoke<br/>each engine"]
+  proxy --> smoke & a11y
+  css[compat.css globs] --> compat["compat<br/>doiuse"]
+  a11y & smoke & compat --> out["one summary line each<br/>exit 0 / 1 / 2"]
+```
+
+One server, one crawl, three checks side by side. wdk never knows the stack: it only calls
+`serve-at`, so adding a stack costs nothing.
+
 ## Start
 
 ```sh
@@ -67,6 +83,9 @@ Run `wdk` for the list; `--engines a,b` and `--skip REGEX` override the config.
 | `wdk perf` | CPU per perf knob (macOS only) |
 | `wdk doctor` | what is missing, one line each, with the fix |
 | `wdk install-browsers` | only the browsers your engines need (macOS) |
+| `wdk deploy` | build and ship a release to the host in seconds; `rollback`, `list` ([how](docs/reference.md#deploys)) |
+| `wdk update` | move the project to the latest wdk release (workflow pins, `flake.lock`) |
+| `wdk serve-dir DIR PORT` | static server for a `serve-at` recipe |
 
 ## Configure
 
@@ -84,9 +103,9 @@ All options, engines, the proxy and perf knobs: [`docs/reference.md`](docs/refer
 
 ## More
 
-- [`docs/reference.md`](docs/reference.md): config, engines, project wiring, private repos, deploys, releases
+- [`docs/reference.md`](docs/reference.md): config, engines, project wiring, deploys, updates, tokens
 - [`docs/perf.md`](docs/perf.md): the ten measurement traps
-- [`docs/roadmap.md`](docs/roadmap.md): what is not built yet (deploy, bootstrap CLI)
-- [`AGENTS.md`](AGENTS.md): rules for contributors and agents
+- [`docs/roadmap.md`](docs/roadmap.md): what is not built yet (bootstrap CLI, content sync, DNS)
+- [`AGENTS.md`](AGENTS.md): rules for contributors and agents, and how wdk is released
 
 Develop: `nix develop`, `bun install`, `just check` before every commit. Licence: AGPL-3.0.
