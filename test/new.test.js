@@ -106,6 +106,7 @@ test('new pins the host key only if ~/.ssh/known_hosts already trusts it', () =>
 	for (const [content, msg] of [
 		['', 'no ed25519 key in ~/.ssh/known_hosts'],
 		[`@revoked ${real}`, 'no ed25519 key in ~/.ssh/known_hosts'],
+		[`${real}@revoked * ${real.split(' ').slice(1).join(' ')}`, 'marks @revoked'],
 		['vps.test ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOtherKeyOtherKeyOtherKeyOtherKeyOtherKey\n', 'different ed25519 key'],
 	]) {
 		writeFileSync(kh, content);
