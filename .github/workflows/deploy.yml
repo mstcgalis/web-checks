@@ -2,7 +2,8 @@
 # `uses: mstcgalis/web-dev-kit/.github/workflows/deploy.yml@vX.Y.Z`. It runs `wdk deploy`: the built
 # site streams to the host's restricted deploy key (vps `site-release`), seconds, no vps CI involved.
 # `rollback: true` runs `wdk deploy rollback --if-current <this sha>` (a failed check after deploy).
-# Needs `deploy.host` in wdk.config.js.
+# Needs `deploy.host` in wdk.config.js. With no DEPLOY_SSH_KEY secret it skips with a notice (a new repo
+# before its vps entry: `wdk new --domain D --vps HOST` sets the key up).
 name: deploy
 on:
   workflow_call:
@@ -26,10 +27,10 @@ on:
     secrets:
       # Private half of the vps site's `deployKey`.
       DEPLOY_SSH_KEY:
-        required: true
+        required: false
       # A pinned `ssh-keyscan -t ed25519 HOST` line: no trust on first use.
       DEPLOY_HOST_KEY:
-        required: true
+        required: false
       # Read-only GitHub token so Nix can fetch private flake inputs (the wdk, sibling repos).
       NIX_ACCESS_TOKEN:
         required: false
@@ -39,17 +40,27 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - id: gate
+        run: |
+          if [ -n "$DEPLOY_SSH_KEY" ]; then echo keyed=true >> "$GITHUB_OUTPUT"
+          else echo "::notice::no DEPLOY_SSH_KEY secret, not deployed (add the vps site entry and the key: wdk new --domain D --vps HOST)"; fi
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        if: steps.gate.outputs.keyed == 'true'
         with:
           ref: ${{ inputs.ref || github.sha }}
       - uses: DeterminateSystems/determinate-nix-action@d0c908e6cbe9f89f36ed8205a3ab6f092636916a # v3
+        if: steps.gate.outputs.keyed == 'true'
       - uses: DeterminateSystems/magic-nix-cache-action@565684385bcd71bad329742eefe8d12f2e765b39 # v13
+        if: steps.gate.outputs.keyed == 'true'
       # Project code runs here, before the deploy key exists on the runner.
       - run: nix develop -c wdk deploy --build-only
-        if: ${{ !inputs.rollback }}
+        if: ${{ steps.gate.outputs.keyed == 'true' && !inputs.rollback }}
         env:
           NIX_CONFIG: ${{ secrets.NIX_ACCESS_TOKEN != '' && format('access-tokens = github.com={0}', secrets.NIX_ACCESS_TOKEN) || '' }}
       - name: ssh key
+        if: steps.gate.outputs.keyed == 'true'
         run: |
           install -d -m 700 ~/.ssh
           printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_deploy
@@ -60,10 +71,11 @@ jobs:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           DEPLOY_HOST_KEY: ${{ secrets.DEPLOY_HOST_KEY }}
       - run: nix develop -c wdk deploy ${{ inputs.rollback && format('rollback --if-current {0}', inputs.ref || github.sha) || '--no-build' }}${{ inputs.host && format(' --host {0}', inputs.host) || '' }}
+        if: steps.gate.outputs.keyed == 'true'
         env:
           NIX_CONFIG: ${{ secrets.NIX_ACCESS_TOKEN != '' && format('access-tokens = github.com={0}', secrets.NIX_ACCESS_TOKEN) || '' }}
       - name: url check
-        if: ${{ inputs.url != '' && !inputs.rollback }}
+        if: ${{ steps.gate.outputs.keyed == 'true' && inputs.url != '' && !inputs.rollback }}
         run: |
           curl -fsS --max-time 10 "${{ inputs.url }}" >/dev/null || {
             nix develop -c wdk deploy rollback --if-current ${{ inputs.ref || github.sha }}${{ inputs.host && format(' --host {0}', inputs.host) || '' }}
