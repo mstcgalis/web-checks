@@ -15,7 +15,7 @@
       forAll = f: nixpkgs.lib.genAttrs systems (system: f nixpkgs.legacyPackages.${system});
       src = nixpkgs.lib.fileset.toSource {
         root = ./.;
-        fileset = nixpkgs.lib.fileset.unions [ ./bin ./lib ./package.json ./bun.lock ];
+        fileset = nixpkgs.lib.fileset.unions [ ./bin ./lib ./templates ./package.json ./bun.lock ];
       };
     in {
       packages = forAll (pkgs: rec {
@@ -45,9 +45,10 @@
           inherit src;
           nativeBuildInputs = [ pkgs.makeWrapper ];
           dontBuild = true;
+          meta.mainProgram = "wdk";
           installPhase = ''
             mkdir -p $out/share/web-dev-kit $out/bin
-            cp -r bin lib package.json $out/share/web-dev-kit/
+            cp -r bin lib templates package.json $out/share/web-dev-kit/
             ln -s ${node-modules}/node_modules $out/share/web-dev-kit/node_modules
             makeWrapper ${pkgs.bun}/bin/bun $out/bin/wdk --add-flags $out/share/web-dev-kit/bin/wdk.js
           '';
@@ -69,6 +70,7 @@
           nativeBuildInputs = [ pkgs.undmg ];
           sourceRoot = ".";
           dontBuild = true;
+          meta.mainProgram = "wdk";
           dontFixup = true; # re-signing or patching would break the notarised bundle
           installPhase = ''
             mkdir -p $out/Applications
