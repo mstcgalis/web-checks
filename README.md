@@ -48,10 +48,15 @@ One server, one crawl, three checks side by side. wdk never knows the stack: it 
 ## Start
 
 ```sh
-nix flake init -t github:mstcgalis/web-dev-kit#static   # or eleventy, vite, astro, kirby
-direnv allow                                            # the dev shell loads on cd; wdk is on PATH
-just check                                              # compat + smoke + a11y
+nix run github:mstcgalis/web-dev-kit -- new static site  # or eleventy, vite, astro, kirby
+cd site && direnv allow                                  # the dev shell loads on cd; wdk is on PATH
+just check                                               # compat + smoke + a11y
 ```
+
+`wdk new` copies the template, commits, creates a private GitHub repo and sets its CI secrets;
+`--domain example.com --vps HOST` also makes a deploy key and prints the vps site entry to add.
+Re-running it finishes whatever step failed. Offline or no GitHub: `--no-github`, or
+`nix flake init -t github:mstcgalis/web-dev-kit#static`.
 
 A template is a flake, a `justfile` (`serve-at`, `build`, `check`), a `wdk.config.js`, an `.envrc`, CI
 workflows, an `AGENTS.md` of rules for the agent, and a starter page. Add
@@ -81,6 +86,7 @@ Run `wdk` for the list; `--engines a,b` and `--skip REGEX` override the config.
 | `wdk load` | cold-load LCP, image weight, heaviest files; `--url` for a deployed site, `--slow`, `--cdn` |
 | `wdk shots` | contact sheet at `.wdk/shots/…/index.html` |
 | `wdk perf` | CPU per perf knob (macOS only) |
+| `wdk new STACK DIR` | a project from a template, on GitHub with its secrets, optionally deployable |
 | `wdk doctor` | what is missing, one line each, with the fix |
 | `wdk install-browsers` | only the browsers your engines need (macOS) |
 | `wdk deploy` | build and ship a release to the host in seconds; `rollback`, `list` ([how](docs/reference.md#deploys)) |

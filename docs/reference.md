@@ -101,11 +101,16 @@ Only changed files cross the wire (a full tar when there is no current release):
 | `wdk.config.js` | `deploy: { host, dir, build }` |
 | site repo secrets | `DEPLOY_SSH_KEY` (private key), `DEPLOY_HOST_KEY` (`ssh-keyscan -t ed25519 HOST` line, pinned), `NIX_ACCESS_TOKEN` if repos are private |
 | vps | `services.sites.<name>.deployKey` = the public half (user `<slug>-deploy`, `restrict`, forced command `site-release`) |
+| reusable `deploy.yml` | no `DEPLOY_SSH_KEY` secret: the job skips with a notice, so a new repo stays green |
 | reusable `deploy.yml` inputs | `host` (another `user@host`, e.g. staging), `url` (curl after the flip; failure rolls back), `ref` (deploy that commit), `rollback` |
 
 Staging and production: `staging` deploys with `host` set to the staging user; production can run on
 `workflow_run` after the tests and pass `ref: github.event.workflow_run.head_sha`, so only the tested
 commit ships.
+
+`wdk new STACK DIR --domain D --vps HOST` does the site side: a fresh key into the repo secrets, the
+pinned host key, `deploy.host` = `<domain with - for .>-deploy@HOST`, and prints the
+`services.sites."D"` entry to add on the vps. The private key exists only in the secret.
 
 By hand: `wdk deploy` (`--no-build`, `--build-only`, `--host`), `wdk deploy rollback`, `wdk deploy list`.
 

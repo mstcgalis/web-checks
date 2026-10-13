@@ -8,24 +8,20 @@ is decided or known but **not built**; done work lives in git history and
 ```mermaid
 flowchart LR
   checks["checks<br/>built"] --> stacks["stack templates<br/>built"] --> deploy["release deploys<br/>built"]
-  deploy --> vps["vps: secrets, content sync, DNS<br/>open"] --> cli["bootstrap CLI<br/>open"]
+  deploy --> new["wdk new<br/>repo, secrets, key"] --> vps["vps: entry PR, DNS, secrets, content sync<br/>open"]
 ```
 
 The CLI comes last: it only orchestrates modules that already exist.
 
-## Bootstrap CLI
+## Bootstrap CLI: the rest of `wdk new`
 
-Its likely steps, each calling an existing module:
+Built: template, git, GitHub repo, secrets, deploy key and config; idempotent re-runs. Missing:
 
-1. Pick stack and name → `nix flake init -t web-dev-kit#<stack>`, `git init`.
-2. `gh repo create`, push `main` (and `staging` if the site opts in).
-3. Domain → a DNS records PR in vps `tofu/dns`. Registrar purchase is out of scope.
-4. A site entry PR in vps (`services.sites.<name>`, deploy key).
-5. CI secrets via `gh secret set` (`DEPLOY_SSH_KEY`, `DEPLOY_HOST_KEY`, `NIX_ACCESS_TOKEN`).
-6. First deploy to staging; print the URLs.
-
-Open: flags first (any agent or script can drive it) with prompts as a thin layer; idempotent
-re-runs on a half-bootstrapped project.
+- **vps site entry** as a PR in `~/src/vps` instead of printed text, then wait for the switch.
+- **DNS** records PR in vps `tofu/dns` from `--domain`. Registrar purchase is out of scope.
+- **Staging**: a `staging` branch and its own site entry and key when the site opts in.
+- **First deploy**, then print the URLs.
+- **Prompts** as a thin layer over the flags, if agents are not the only users.
 
 ## vps (in `~/src/vps`)
 
