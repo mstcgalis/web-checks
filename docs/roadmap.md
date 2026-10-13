@@ -32,7 +32,7 @@ Specced: `kirby`, `static`. Missing:
 - **Build stacks** (Eleventy, Vite and Astro done as templates): `build` produces `dist/`, `serve-at` runs
   `wdk serve-dir dist`. dgalis.sk (Eleventy) is the first real case.
 - **`nix flake init -t web-dev-kit#<stack>` templates**: done for `static`, `kirby`, `eleventy`, `vite`, `astro`
-  (each ships a generic `AGENTS.md`). Kirby's template is not smoke-tested (needs a Kirby checkout).
+  (each ships a generic `AGENTS.md`). Kirby's template is smoke-tested (composer, build, `wdk check`).
 - **Each stack declares its deploy kind** (see 3).
 - Open: does a stack adapter also pin its linters (Pint/PHPStan for Kirby, Prettier/ESLint for JS)?
   Probably yes, through the devShell, but this is undecided.
@@ -46,7 +46,7 @@ stateless); sonda follows once that path is proven.
 Missing:
 
 - **One `site.nix`** (done 2026-10-12): every site is a release-deploy entry (domain, www redirect, vhost, deploy user, key).
-  Built: static sites (iloweit.sk, dgalis.sk) and the Kirby kind (sonda-web production + staging, 2026-10-13). Not built: the Kirby template, sops secrets.
+  Built: static sites (iloweit.sk, dgalis.sk) and the Kirby kind (sonda-web production + staging, 2026-10-13). Kirby template built (2026-10-13). Not built: sops secrets.
   Delete sonda's old pull users, keys and `/srv/sonda-web*` after 2026-10-19.
   `store`/`store + state`/`rsync` kinds are gone (too slow).
 - **Staging per site** (done 2026-10-12 for `store` sites, untested live; no site has opted in): see reference.md "Deploys". Sonda's staging is a Kirby entry (2026-10-13).

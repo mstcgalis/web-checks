@@ -47,7 +47,7 @@ workflows, an `AGENTS.md` of rules for the agent, and a starter page. Add
 | `eleventy` | `src/` → `_site/` |
 | `vite` | → `dist/` |
 | `astro` | → `dist/` |
-| `kirby` | Kirby in `./kirby` (git submodule) with `php -S` |
+| `kirby` | Kirby from composer with `php -S`; checks render `tests/content` |
 
 Existing project: add `wdk.lib.devShell { pkgs; stack = "…"; }` to its flake, a `serve-at` recipe and
 a `wdk.config.js` ([how](docs/reference.md#use-in-an-existing-project)).
