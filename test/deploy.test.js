@@ -135,3 +135,9 @@ test('reusable deploy.yml takes host and url, and rolls back when the url check 
 	expect(y).toContain('curl -fsS --max-time 10 "${{ inputs.url }}"');
 	expect(y).toContain('rollback --if-current');
 });
+
+test('reusable deploy.yml deploys the ref it is given, not whatever main moved to', () => {
+	const y = readFileSync(join(import.meta.dir, '..', '.github', 'workflows', 'deploy.yml'), 'utf8');
+	expect(y).toContain('ref: ${{ inputs.ref || github.sha }}');
+	expect(y).not.toMatch(/--if-current \$\{\{ github\.sha/);
+});
