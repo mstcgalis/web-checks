@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import { slow } from './run.js';
-import { chmodSync, cpSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { chmodSync, cpSync, existsSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -38,9 +38,23 @@ for (const name of ['static', 'eleventy', 'vite', 'astro']) {
 
 test('template kirby: has its files and a parseable justfile', async () => {
 	const dir = project('kirby');
-	for (const f of ['flake.nix', 'justfile', 'wdk.config.js', '.gitignore', '.envrc', 'assets/css/style.css']) expect(await Bun.file(join(dir, f)).exists()).toBe(true);
+	for (const f of ['flake.nix', 'justfile', 'wdk.config.js', '.gitignore', '.envrc', 'composer.json', 'composer.lock', 'index.php', 'roots.php', 'tests/router.php', '.github/workflows/deploy.yml', 'assets/css/style.css']) expect(await Bun.file(join(dir, f)).exists()).toBe(true);
 	expect(sh(['just', '--list'], dir).code).toBe(0);
 });
+
+// Needs php and composer (the kirby dev shell has both) and the network for composer.
+slow('template kirby: build ships code only, assets get a content hash, wdk check passes', () => {
+	const dir = project('kirby');
+	for (const c of [['git', 'init', '-q'], ['git', 'add', '-A'], ['git', '-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'init'], ['composer', 'install', '--no-interaction', '--quiet'], ['just', 'build']]) expect(sh(c, dir).code).toBe(0);
+	const rel = join(dir, '.wdk/release');
+	for (const f of ['index.php', 'roots.php', 'vendor/autoload.php', 'kirby/bootstrap.php', 'site/plugins/assets/index.php']) expect(existsSync(join(rel, f))).toBe(true);
+	for (const f of ['tests', '.github', 'justfile', 'wdk.config.js']) expect(existsSync(join(rel, f))).toBe(false);
+	const check = sh(['wdk', 'check', '--engines', 'chromium'], dir);
+	expect(check.out).toContain('✓ smoke ');
+	expect(check.code).toBe(0);
+	const html = sh(['php', '-r', 'chdir($argv[1]); $_SERVER["REQUEST_URI"] = "/"; include "tests/router.php";', dir], dir).out;
+	expect(html).toMatch(/style\.css\?v=[0-9a-f]{12}"/);
+}, 300_000);
 
 // templates are copied standalone by `nix flake init`, so the shared rules are duplicated; keep them in sync
 test('AGENTS.md shared rules (above the ---) are identical across templates', async () => {

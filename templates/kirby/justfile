@@ -4,12 +4,20 @@ wdk := if `command -v wdk || true` != "" { "wdk" } else { "nix develop -c wdk" }
 default:
     @just --list
 
-# Kirby lives in ./kirby (git submodule add https://github.com/getkirby/kirby kirby).
-serve-at PORT:
-    php -S localhost:{{PORT}} kirby/router.php
+# Kirby and vendor/ come from composer (run `composer install` once).
+# Dev server on your local content/ at http://localhost:8000
+serve:
+    php -S localhost:8000 kirby/router.php
 
-# no build step
+# required by wdk: a server rendering tests/content (not content/)
+serve-at PORT:
+    php -S localhost:{{PORT}} tests/router.php
+
+# the release a deploy ships: the committed tree plus production vendor/ and kirby/ (.wdk/release)
 build:
+    rm -rf .wdk/release && mkdir -p .wdk/release
+    git archive HEAD | tar -x -C .wdk/release
+    composer install -d .wdk/release --no-dev --optimize-autoloader --no-interaction --quiet
 
 # compat + smoke + a11y on one server
 check:

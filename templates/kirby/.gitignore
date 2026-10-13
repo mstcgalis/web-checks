@@ -1,5 +1,12 @@
 node_modules/
 .wdk/
 result
-/vendor/
 .direnv/
+/vendor/
+/kirby/
+/media/
+/site/accounts/
+/site/sessions/
+/site/cache/
+# server-owned once deployed (the Panel writes there); checks render tests/content
+/content/

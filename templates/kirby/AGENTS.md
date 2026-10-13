@@ -18,7 +18,8 @@ Generic rules from web-dev-kit. Add project specifics below the line.
   author real content only when asked: pull first, edit only the pages asked for, dry-run the push,
   push path-scoped, never delete.
 - Blueprint field names are frozen: renaming orphans live data silently. Adding a field is safe.
-- No build step and no new runtime composer dependencies; dev-only ones are fine.
+- No asset build step and no new runtime composer dependencies; dev-only ones are fine.
+- Link assets with `css()`/`js()`: they get a content-hash `?v=`, so a changed file is a new URL.
 - Production secrets come from `/run/secrets`, never `config.php` or the repo.
 - Escape at the point of output: `->html()` / `->kt()` for content, `esc()` in quoted attributes.
   Never echo `->value()` or `->url()` raw.

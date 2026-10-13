@@ -1,0 +1,13 @@
+{
+    "name": "site/web",
+    "type": "project",
+    "require": {
+        "php": "^8.5",
+        "getkirby/cms": "^5.5"
+    },
+    "config": {
+        "allow-plugins": {
+            "getkirby/composer-installer": true
+        }
+    }
+}

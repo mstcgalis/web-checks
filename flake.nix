@@ -105,6 +105,7 @@
         description = "web-dev-kit ${name} project";
       });
 
-      devShells = forAll (pkgs: { default = self.lib.devShell { inherit pkgs; }; });
+      # kirby: php and composer for the Kirby template test.
+      devShells = forAll (pkgs: { default = self.lib.devShell { inherit pkgs; stack = "kirby"; }; });
     };
 }
