@@ -5,7 +5,7 @@
 ```nix
 # flake.nix
 {
-  inputs.wdk.url = "github:mstcgalis/web-dev-kit"; # pinned by flake.lock; `nix flake update wdk` to upgrade
+  inputs.wdk.url = "github:mstcgalis/web-dev-kit"; # pinned by flake.lock; `wdk update` to upgrade
   inputs.nixpkgs.follows = "wdk/nixpkgs";
   outputs = { wdk, nixpkgs, ... }: {
     devShells = nixpkgs.lib.genAttrs [ "aarch64-darwin" "x86_64-linux" ] (system: {
@@ -18,18 +18,6 @@
 The project's `justfile` must have **`serve-at PORT`**: a foreground server on PORT. Every command
 starts the site through it. Static sites use `wdk serve-dir DIR {{PORT}}`.
 
-## Browsers
-
-On Linux the dev shell provides them. On macOS, `wdk install-browsers` downloads only what the
-configured engines need and is not already on disk; with Google Chrome installed, the default config
-needs nothing (Chrome stands in for Playwright's Chromium). `wdk doctor` lists what is missing and
-the fix.
-
-## Exit codes
-
-0 pass, 1 findings, 2 broken setup (the message says the fix). `doctor` exits 1 if anything is missing;
-`compat` exits 2 if its globs match nothing; `shots`, `perf` and `load` exit 0.
-
 ## `wdk.config.js`
 
 ```js
@@ -40,56 +28,108 @@ export default {
   compat: { css: ['assets/css/*.css'], targets: 'defaults, Firefox >= 115', allow: [] },
   proxy: { block: ['panel', 'api', '*.php'] },
   perf: { page: '/', knobs: { zoom: { css: '…', probe: '.slide img' }, seismo: { script: 'seismograph' } } },
+  deploy: { host: 'SITE-deploy@HOST', dir: 'dist', build: 'just build' },
 };
 ```
 
-- `pages`: crawl entry points, a skip regex, and a page limit.
-- `engines`: `ci` and `local` lists. An engine is `chrome` (branded), `chromium`, `firefox`, `webkit`,
-  or `exe:<firefox|chrome>:<path>` for a binary Playwright cannot drive; the path may be `$VAR`.
-- `compat`: stylesheet globs, a browserslist `targets`, and `allow` for accepted findings. With no
-  `css`, `check` skips compat.
-- `proxy.block`: paths the proxy refuses.
-- `perf`: the page to measure and the knobs (CSS or script variants) to compare.
+| Key | Meaning |
+|---|---|
+| `pages` | crawl entry points, a skip regex, a page limit |
+| `engines` | `ci` and `local` lists: `chrome` (branded), `chromium`, `firefox`, `webkit`, or `exe:<firefox\|chrome>:<path>` for a binary Playwright cannot drive (path may be `$VAR`) |
+| `viewports` | `[width, height]` pairs for shots and load |
+| `compat` | stylesheet globs, browserslist `targets`, `allow` for accepted findings; no `css` = `check` skips compat |
+| `proxy.block` | paths the proxy refuses |
+| `perf` | the page to measure and the knobs (CSS or script variants) to compare; traps: [`perf.md`](perf.md) |
+| `deploy` | `host` (restricted user), `dir` (what ships), `build` (run first) |
+
+## Browsers and the proxy
+
+On Linux the dev shell provides browsers. On macOS, `wdk install-browsers` downloads only what the
+configured engines need and is not already on disk; with Google Chrome installed, the default config
+needs nothing (Chrome stands in for Playwright's Chromium). `wdk doctor` lists what is missing and
+the fix.
 
 Every browser goes through a proxy that injects an error beacon, which is how `exe:` engines report
 errors. The proxy also takes `?wdk-off=a,b|static`, `?wdk-mouse` and `?wdk-freeze`, so
 `wdk perf --serve` variants open on any device on the LAN.
 
-Measurement pitfalls: [`perf.md`](perf.md).
+## Exit codes
 
-## Private repos
-
-Site repos stay private; Nix fetches them (and the wdk, if it goes private) with one GitHub token,
-`NIX_ACCESS_TOKEN`: a fine-grained PAT, Contents read and Actions read and write (dispatching the vps
-deploy), on all repositories, so new repos need no per-repo step. Locally:
-`access-tokens = github.com=<token>` in `~/.config/nix/nix.conf`. In CI: a repo secret of that name
-(the vps repo needs it; the reusable `check.yml` uses it when set and callers pass only that secret).
-The bootstrap CLI will set it with `gh secret set`.
+0 pass, 1 findings, 2 broken setup (the message says the fix). `doctor` exits 1 if anything is missing;
+`compat` exits 2 if its globs match nothing; `shots`, `perf` and `load` exit 0.
 
 ## Deploys
 
-Release deploys: a site is a directory on the vps, `/srv/sites/<domain>/releases/<sha>/`, with a
-`current` symlink flipped atomically (5 releases kept). Push to `main`: the template's `deploy.yml` runs
-`check` and `deploy` in parallel (a hotfix never waits on browsers); `deploy.yml` runs `wdk deploy`, which
-builds (`deploy.build`), asks the host for a hash manifest of the current release and streams only the
-changed files (plus a delete list) as `tar | zstd | ssh` to the site's restricted key (a full tar when
-there is no current release). The vps `site-release` forced command hardlinks the old release, applies
-the delta and flips: seconds even for a 140 MB site, no vps CI. If `check` then fails, a
-`rollback` job runs `wdk deploy rollback --if-current <sha>` (a no-op if a newer release landed).
-Optional inputs of the reusable `deploy.yml`: `host` (deploy to that `user@host`, e.g. staging), `url` (curl it after the flip; a failure rolls back) and `ref` (deploy that commit; a `workflow_run` caller passes `github.event.workflow_run.head_sha` so only the tested commit ships).
+A site is a directory on the vps; a release is one commit, flipped in atomically.
 
-- Config: `deploy: { host: 'SITE-deploy@HOST', dir: 'dist', build: 'just build' }` in `wdk.config.js`.
-- Secrets on the site repo: `DEPLOY_SSH_KEY` (private key), `DEPLOY_HOST_KEY` (`ssh-keyscan -t ed25519 HOST`
-  line, pinned). vps: `services.sites.<name>.deployKey` = the public half (user `<slug>-deploy`, `restrict`).
-- By hand: `wdk deploy`, `wdk deploy rollback`, `wdk deploy list`.
-- Kirby sites (`kind = "kirby"`, sonda-web production and staging) keep mutable state in `shared/`, set by the PHP-FPM pool's `KIRBY_SHARED`; releases are read-only code. The Kirby template ships it: `roots.php` (KIRBY_SHARED), `just build` (`git archive` + `composer install --no-dev` into `.wdk/release`, `.gitattributes` export-ignores the rest), a `css()`/`js()` content-hash `?v=` plugin, and the deploy caller.
+```
+/srv/sites/<domain>/
+├── current -> releases/<sha>     symlink, flipped atomically
+├── releases/<sha>/ …             last 5 kept, read-only
+└── shared/                       kirby only: content, media, accounts, sessions, cache, logs
+```
 
-## Branches and releases
+Push to `main` runs the template's `deploy.yml`: `check` and `deploy` in parallel, so a hotfix never
+waits on browsers.
 
-Projects: `staging` deploys staging, `main` deploys production; both fast-forward only, conventional
-commits. The wdk itself: work on `web-kit`, fast-forward `main`, tag `vX.Y.Z` from `main`
-(`package.json` is the version source). Then `just lock-templates` and commit, so new projects start
-on this release. Projects run `wdk update` (workflow pins and `flake.lock` to the latest release; nothing committed). Each template ships `update.yml`: weekly, it runs that and opens a PR; it needs `NIX_ACCESS_TOKEN` with Contents, Pull requests and Workflows write on the project (the bump edits workflow files). After changing `bun.lock`, run `just hash` and
-update `outputHash` in `flake.nix`.
+```mermaid
+sequenceDiagram
+  participant CI as deploy.yml (CI)
+  participant H as vps: site-release
+  par check
+    CI->>CI: wdk check
+  and deploy
+    CI->>CI: wdk deploy --build-only (deploy.build, before the key is on disk)
+    CI->>H: manifest
+    H-->>CI: sha256 of every file in current
+    CI->>H: tar | zstd | ssh: changed files + delete list
+    H->>H: hardlink current → releases/<sha>, apply delta, flip current
+    opt url input
+      CI->>CI: curl url, failure → rollback
+    end
+  end
+  opt check failed
+    CI->>H: rollback --if-current <sha> (no-op if a newer release landed)
+  end
+```
 
-`just check` is the fast suite (before every commit); `just check-all` runs every test, as CI does.
+Only changed files cross the wire (a full tar when there is no current release): seconds even for a
+140 MB site, no CI on the vps.
+
+| Where | What |
+|---|---|
+| `wdk.config.js` | `deploy: { host, dir, build }` |
+| site repo secrets | `DEPLOY_SSH_KEY` (private key), `DEPLOY_HOST_KEY` (`ssh-keyscan -t ed25519 HOST` line, pinned), `NIX_ACCESS_TOKEN` if repos are private |
+| vps | `services.sites.<name>.deployKey` = the public half (user `<slug>-deploy`, `restrict`, forced command `site-release`) |
+| reusable `deploy.yml` inputs | `host` (another `user@host`, e.g. staging), `url` (curl after the flip; failure rolls back), `ref` (deploy that commit), `rollback` |
+
+Staging and production: `staging` deploys with `host` set to the staging user; production can run on
+`workflow_run` after the tests and pass `ref: github.event.workflow_run.head_sha`, so only the tested
+commit ships.
+
+By hand: `wdk deploy` (`--no-build`, `--build-only`, `--host`), `wdk deploy rollback`, `wdk deploy list`.
+
+**Kirby** (`kind = "kirby"`): mutable state lives in `shared/`, set by the PHP-FPM pool's
+`KIRBY_SHARED`; releases are read-only code. The Kirby template ships all of it: `roots.php`
+(reads `KIRBY_SHARED`), `just build` (`git archive` + `composer install --no-dev` into `.wdk/release`;
+`.gitattributes` export-ignores the rest), a `css()`/`js()` content-hash `?v=` plugin, and the deploy
+caller.
+
+## Updates and tokens
+
+`wdk update` moves a project to the latest wdk release: workflow `@vX` pins, the flake tag, then
+`nix flake update wdk`. Nothing is committed. Each template ships `update.yml`, which runs it weekly and
+opens a PR.
+
+One fine-grained GitHub PAT, `NIX_ACCESS_TOKEN`, covers everything. Locally:
+`access-tokens = github.com=<token>` in `~/.config/nix/nix.conf`; in CI: a repo secret of that name
+(the reusable workflows use it when set).
+
+| Needed for | Permission |
+|---|---|
+| Nix fetching private site repos (and wdk, if private) | Contents read, all repositories (new repos need no step) |
+| `update.yml` opening its PR | Contents, Pull requests and Workflows write on the project (the bump edits workflow files) |
+
+## Project branches
+
+`staging` deploys staging, `main` deploys production; both fast-forward only, conventional commits.
