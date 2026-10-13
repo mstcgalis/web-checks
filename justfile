@@ -14,6 +14,6 @@ check-all:
 hash:
     nix build .#node-modules 2>&1 | grep 'got:' || echo "hash unchanged"
 
-# after pushing a release to main: point the templates' flake.lock at it, so new projects get this wdk
+# after pushing a release tag: point the templates' workflow pins and flake.lock at it, so new projects get this wdk
 lock-templates:
-    for t in templates/*/flake.lock; do (cd "$(dirname "$t")" && nix flake update wdk); done
+    for t in templates/*/; do (cd "$t" && bun ../../bin/wdk.js update); done
