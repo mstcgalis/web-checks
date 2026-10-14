@@ -11,7 +11,7 @@ serve:
 
 # required by wdk: a server rendering tests/content (not content/)
 serve-at PORT:
-    php -S localhost:{{PORT}} tests/router.php
+    php -q -S localhost:{{PORT}} tests/router.php
 
 # the release a deploy ships: the committed tree plus production vendor/ and kirby/ (.wdk/release)
 build:
