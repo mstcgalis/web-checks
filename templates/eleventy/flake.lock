@@ -47,11 +47,11 @@
         "nixpkgs-browsers": "nixpkgs-browsers"
       },
       "locked": {
-        "lastModified": 1791964020,
-        "narHash": "sha256-0i1GRaatPC2Lg1zvu4VGwEO77XlVkCHPfdXtEC38PGA=",
+        "lastModified": 1791965096,
+        "narHash": "sha256-vPMkig/pPgK6oJcto4fGTj4l55KTQ1exGqr/EIbVXoA=",
         "owner": "mstcgalis",
         "repo": "web-dev-kit",
-        "rev": "d242449cb10b232f52306977b0d43441eb45397c",
+        "rev": "8a289d0a2034b948ca68d2bc2de8fbea22c4b314",
         "type": "github"
       },
       "original": {
