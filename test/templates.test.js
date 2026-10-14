@@ -49,7 +49,7 @@ test('template kirby: has its files and a parseable justfile', async () => {
 });
 
 // Needs php and composer (the kirby dev shell has both) and the network for composer.
-slow('template kirby: build ships code only, assets get a content hash, wdk check passes', () => {
+slow('template kirby: build ships code only, assets get a content hash, wdk check passes', async () => {
 	const dir = project('kirby');
 	for (const c of [['git', 'init', '-q'], ['git', 'add', '-A'], ['git', '-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'init'], ['composer', 'install', '--no-interaction', '--quiet'], ['just', 'build']]) expect(sh(c, dir).code).toBe(0);
 	const rel = join(dir, '.wdk/release');

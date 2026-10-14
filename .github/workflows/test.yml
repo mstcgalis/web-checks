@@ -12,6 +12,6 @@ jobs:
       # Actions cache rate limit and 10 GB cap (a 12-minute post step). Measured 2026-10-13: 3m19s vs 3m44s+.
       - run: nix flake check
       - run: nix build .#wdk
-      - run: nix develop -c sh -c 'bun install --frozen-lockfile && bun test'
+      - run: nix develop -c sh -c 'bun install --frozen-lockfile && bun test --parallel'
       # Every engine on a non-NixOS Linux: the Firefox sandbox and WebKit EGL fixes live or die here.
       - run: nix develop -c sh -c 'cd test/project && bun ../../bin/wdk.js smoke --skip "^/broken" --engines chromium,firefox,webkit'

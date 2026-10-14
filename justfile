@@ -4,11 +4,11 @@ default:
 
 # fast tests (skips the browser-heavy end-to-end ones): before every commit
 check:
-    WDK_FAST=1 bun test
+    WDK_FAST=1 bun test --parallel
 
 # every test, as CI runs them: before a release
 check-all:
-    bun test
+    bun test --parallel
 
 # the node_modules hash after a bun.lock change
 hash:

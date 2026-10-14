@@ -30,7 +30,7 @@ function deploy(s, args) {
 }
 const arg = (s) => readFileSync(join(s.dir, 'ssh-arg'), 'utf8').trim();
 
-test('release streams the dist dir to the host as `release <HEAD sha>`', () => {
+test('release streams the dist dir to the host as `release <HEAD sha>`', async () => {
 	const s = setup();
 	const r = deploy(s, ['--no-build', '--host', 'x@h']);
 	expect(r.err).toBe('');
@@ -42,40 +42,40 @@ test('release streams the dist dir to the host as `release <HEAD sha>`', () => {
 	expect(r.out).toContain('released');
 });
 
-test('release runs deploy.build first', () => {
+test('release runs deploy.build first', async () => {
 	const s = setup({ config: `{ deploy: { host: 'x@h', build: 'touch built' } }` });
 	const r = deploy(s, []);
 	expect(r.code).toBe(0);
 	expect(existsSync(join(s.dir, 'built'))).toBe(true);
 });
 
-test('no host: says where to set it, exit 2', () => {
+test('no host: says where to set it, exit 2', async () => {
 	const r = deploy(setup(), ['--no-build']);
 	expect(r.err).toContain('no deploy host: set deploy.host in wdk.config.js or pass --host user@host');
 	expect(r.code).toBe(2);
 });
 
-test('missing dist dir: names it and says what to do, exit 2', () => {
+test('missing dist dir: names it and says what to do, exit 2', async () => {
 	const r = deploy(setup({ dist: false }), ['--no-build', '--host', 'x@h']);
 	expect(r.err).toContain('"dist"');
 	expect(r.err).toContain('run the build, or set deploy.dir');
 	expect(r.code).toBe(2);
 });
 
-test('not a git repo: explains the sha, exit 2', () => {
+test('not a git repo: explains the sha, exit 2', async () => {
 	const r = deploy(setup({ git: false }), ['--no-build', '--host', 'x@h']);
 	expect(r.err).toContain('deploy names a release by commit sha');
 	expect(r.code).toBe(2);
 });
 
-test('a failing ssh: exit 1 with the key hint', () => {
+test('a failing ssh: exit 1 with the key hint', async () => {
 	const r = deploy(setup({ sshExit: 255 }), ['--no-build', '--host', 'x@h']);
 	expect(r.err).toContain('deploy to x@h failed');
 	expect(r.err).toContain('deployKey');
 	expect(r.code).toBe(1);
 });
 
-test('rollback --if-current and list pass through as the remote command', () => {
+test('rollback --if-current and list pass through as the remote command', async () => {
 	const s = setup();
 	const sha = 'a'.repeat(40);
 	expect(deploy(s, ['rollback', '--if-current', sha, '--host', 'x@h']).code).toBe(0);
@@ -84,7 +84,7 @@ test('rollback --if-current and list pass through as the remote command', () => 
 	expect(arg(s)).toBe('list');
 });
 
-test('a failing build stops before any upload, exit 2', () => {
+test('a failing build stops before any upload, exit 2', async () => {
 	const s = setup({ config: `{ deploy: { host: 'x@h', build: 'false' } }` });
 	const r = deploy(s, []);
 	expect(r.err).toContain('build failed');
@@ -92,7 +92,7 @@ test('a failing build stops before any upload, exit 2', () => {
 	expect(existsSync(join(s.dir, 'ssh-arg'))).toBe(false);
 });
 
-test('--build-only builds and stops: no host needed, no upload', () => {
+test('--build-only builds and stops: no host needed, no upload', async () => {
 	const s = setup({ config: `{ deploy: { build: 'touch built' } }` });
 	const r = deploy(s, ['--build-only']);
 	expect(r.code).toBe(0);
@@ -102,7 +102,7 @@ test('--build-only builds and stops: no host needed, no upload', () => {
 
 const sha256 = (t) => new Bun.CryptoHasher('sha256').update(t).digest('hex');
 
-test('with a remote manifest, only changed files travel and the remote command is --delta', () => {
+test('with a remote manifest, only changed files travel and the remote command is --delta', async () => {
 	const s = setup({ manifest: `${sha256('hi')}  ./index.html\n${sha256('same')}  ./keep.txt\n${sha256('gone')}  ./old.txt\n` });
 	writeFileSync(join(s.dir, 'dist', 'keep.txt'), 'same');
 	writeFileSync(join(s.dir, 'dist', 'new.txt'), 'new');
@@ -118,7 +118,7 @@ test('with a remote manifest, only changed files travel and the remote command i
 	expect(r.out).toContain('1 changed, 1 removed');
 });
 
-test('an empty or failing manifest falls back to a full release', () => {
+test('an empty or failing manifest falls back to a full release', async () => {
 	const none = setup();
 	expect(deploy(none, ['--no-build', '--host', 'x@h']).code).toBe(0);
 	expect(arg(none)).toMatch(/^release [0-9a-f]{40}$/);
@@ -127,7 +127,7 @@ test('an empty or failing manifest falls back to a full release', () => {
 	expect(arg(bad)).toMatch(/^release [0-9a-f]{40}$/);
 });
 
-test('reusable deploy.yml takes host and url, and rolls back when the url check fails', () => {
+test('reusable deploy.yml takes host and url, and rolls back when the url check fails', async () => {
 	const y = readFileSync(join(import.meta.dir, '..', '.github', 'workflows', 'deploy.yml'), 'utf8');
 	expect(y).toContain('host:');
 	expect(y).toContain('url:');
@@ -136,7 +136,7 @@ test('reusable deploy.yml takes host and url, and rolls back when the url check 
 	expect(y).toContain('rollback --if-current');
 });
 
-test('reusable deploy.yml deploys the ref it is given, not whatever main moved to', () => {
+test('reusable deploy.yml deploys the ref it is given, not whatever main moved to', async () => {
 	const y = readFileSync(join(import.meta.dir, '..', '.github', 'workflows', 'deploy.yml'), 'utf8');
 	expect(y).toContain('ref: ${{ inputs.ref || github.sha }}');
 	expect(y).not.toMatch(/--if-current \$\{\{ github\.sha/);

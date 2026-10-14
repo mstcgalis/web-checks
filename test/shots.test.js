@@ -11,8 +11,8 @@ const SHELL = join(shellDir, [...new Bun.Glob('*/chrome-headless-shell').scanSyn
 
 afterAll(() => rmSync(join(PROJECT, '.wdk'), { recursive: true, force: true }));
 
-slow('shots writes a sheet: pages × (engine × viewport), exe engines included', () => {
-	const r = wdk(['shots', '--engines', 'chromium,exe:chrome:$WDK_TEST_CHROME'], { WDK_TEST_CHROME: SHELL });
+slow('shots writes a sheet: pages × (engine × viewport), exe engines included', async () => {
+	const r = await wdk(['shots', '--engines', 'chromium,exe:chrome:$WDK_TEST_CHROME'], { WDK_TEST_CHROME: SHELL });
 	expect(r.code).toBe(0);
 	const sheet = r.out.match(/sheet: (.+)/)[1].trim();
 	const html = readFileSync(sheet, 'utf8');

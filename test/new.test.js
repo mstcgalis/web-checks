@@ -40,7 +40,7 @@ function wdkNew(root, args, env = {}) {
 }
 const log = (dir) => Bun.spawnSync(['git', 'log', '--format=%s'], { cwd: dir }).stdout.toString().trim().split('\n');
 
-test('new: template pinned to this wdk, committed, on GitHub, secrets set, deploy configured; a re-run does nothing', () => {
+test('new: template pinned to this wdk, committed, on GitHub, secrets set, deploy configured; a re-run does nothing', async () => {
 	const root = setup();
 	const dir = join(root, 'site');
 	const r = wdkNew(root, ['static', 'site', '--domain', 'example.com', '--vps', 'vps.test'], { NIX_ACCESS_TOKEN: 'tok' });
@@ -66,7 +66,7 @@ test('new: template pinned to this wdk, committed, on GitHub, secrets set, deplo
 	expect(log(dir)).toHaveLength(2);
 });
 
-test('new --no-github: a local project only, no gh calls', () => {
+test('new --no-github: a local project only, no gh calls', async () => {
 	const root = setup();
 	const r = wdkNew(root, ['kirby', 'k', '--no-github']);
 	expect(r.code).toBe(0);
@@ -75,7 +75,7 @@ test('new --no-github: a local project only, no gh calls', () => {
 	expect(log(join(root, 'k'))).toEqual(['chore: start from the wdk kirby template']);
 });
 
-test('new: no token anywhere says where to put one; a bad stack, a non-empty dir and a lone --domain exit 2', () => {
+test('new: no token anywhere says where to put one; a bad stack, a non-empty dir and a lone --domain exit 2', async () => {
 	const root = setup();
 	const r = wdkNew(root, ['static', 'site']);
 	expect(r.code).toBe(0);
@@ -90,7 +90,7 @@ test('new: no token anywhere says where to put one; a bad stack, a non-empty dir
 	expect(lone.err).toContain('--domain and --vps go together');
 });
 
-test('new reads the token Nix already uses from nix.conf', () => {
+test('new reads the token Nix already uses from nix.conf', async () => {
 	const root = setup();
 	mkdirSync(join(root, '.config', 'nix'), { recursive: true });
 	writeFileSync(join(root, '.config', 'nix', 'nix.conf'), 'access-tokens = github.com=fromconf\n');
@@ -98,7 +98,7 @@ test('new reads the token Nix already uses from nix.conf', () => {
 	expect(readFileSync(join(root, 'secrets', 'NIX_ACCESS_TOKEN'), 'utf8')).toBe('fromconf');
 });
 
-test('new pins the host key only if ~/.ssh/known_hosts already trusts it', () => {
+test('new pins the host key only if ~/.ssh/known_hosts already trusts it', async () => {
 	const root = setup();
 	const args = ['static', 'site', '--domain', 'example.com', '--vps', 'vps.test'];
 	const kh = join(root, '.ssh', 'known_hosts');

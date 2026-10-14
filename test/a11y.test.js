@@ -7,21 +7,21 @@ import { slow, wdk } from './run.js';
 
 const WDK = join(import.meta.dir, '..', 'bin', 'wdk.js');
 
-test('a11y crawls from the start paths and fails on the violation one link away', () => {
-	const r = wdk(['a11y']);
+test('a11y crawls from the start paths and fails on the violation one link away', async () => {
+	const r = await wdk(['a11y']);
 	expect(r.out).toContain('✗ image-alt (critical): Images must have alternative text — 1 page(s)');
 	expect(r.out).toContain('    /about  img');
 	expect(r.out).toContain('4 pages, 1 violation(s)');
 	expect(r.code).toBe(1);
 }, 60_000);
 
-test('a11y --skip keeps the crawl on clean pages', () => {
-	const r = wdk(['a11y', '--skip', '^/about']);
+test('a11y --skip keeps the crawl on clean pages', async () => {
+	const r = await wdk(['a11y', '--skip', '^/about']);
 	expect(r.out).toContain('3 pages, 0 violation(s)');
 	expect(r.code).toBe(0);
 }, 60_000);
 
-test('a11y audits a page whose CSP forbids injected scripts', () => {
+test('a11y audits a page whose CSP forbids injected scripts', async () => {
 	const dir = mkdtempSync(join(tmpdir(), 'wdk-csp-'));
 	mkdirSync(join(dir, 'site'));
 	writeFileSync(join(dir, 'site', 'index.html'), `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="script-src 'none'"><title>CSP</title></head><body><main><h1>CSP</h1><img src="data:,"></main></body></html>`);
@@ -32,7 +32,7 @@ test('a11y audits a page whose CSP forbids injected scripts', () => {
 	expect(r.exitCode).toBe(1);
 }, 60_000);
 
-test('report groups by rule in page order and names pages axe never ran on', () => {
+test('report groups by rule in page order and names pages axe never ran on', async () => {
 	const v = { id: 'image-alt', impact: 'critical', help: 'Images must have alternative text', nodes: [{ target: ['img'] }] };
 	const r = report(new Map([['/b', [v]], ['/a', [v]]]), ['/a', '/b', '/c']);
 	expect(r.lines).toEqual([
@@ -45,8 +45,8 @@ test('report groups by rule in page order and names pages axe never ran on', () 
 	expect(r.code).toBe(1);
 });
 
-slow('check without a Blink engine still audits, in a Chromium pass of its own', () => {
-	const r = wdk(['check', '--engines', 'webkit', '--skip', '^/broken']);
+slow('check without a Blink engine still audits, in a Chromium pass of its own', async () => {
+	const r = await wdk(['check', '--engines', 'webkit', '--skip', '^/broken']);
 	expect(r.out).toContain('✓ smoke  3 pages × 1 engine(s), 0 error(s)');
 	expect(r.out).toContain('✗ a11y   3 pages, 1 violation(s)');
 }, 120_000);

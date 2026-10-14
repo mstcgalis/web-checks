@@ -30,13 +30,13 @@ afterAll(() => {
 });
 const get = (path, init) => fetch(proxy.url + path, init);
 
-test('parseOff: static means every knob; unknown knobs throw', () => {
+test('parseOff: static means every knob; unknown knobs throw', async () => {
 	expect(parseOff('static', knobs)).toEqual(['spin', 'ticker']);
 	expect(parseOff('', knobs)).toEqual([]);
 	expect(() => parseOff('nope', knobs)).toThrow('unknown knob "nope"');
 });
 
-test('rewriteHtml: beacon first in head, knob css, script removed, origin rewritten', () => {
+test('rewriteHtml: beacon first in head, knob css, script removed, origin rewritten', async () => {
 	const html = `<html><head><title>x</title></head><body><a href="http://o/a">a</a><script src="/ticker.js"></script></body></html>`;
 	const out = rewriteHtml(html, { knobs, off: ['spin', 'ticker'], origin: 'http://o', self: 'http://p' });
 	expect(out.indexOf(BEACON)).toBe(out.indexOf('<head>') + '<head>'.length);
@@ -46,17 +46,17 @@ test('rewriteHtml: beacon first in head, knob css, script removed, origin rewrit
 	expect(() => rewriteHtml('<head></head>', { knobs, off: ['ticker'] })).toThrow('no <script> for ticker.js');
 });
 
-test('rewriteHtml: no <head> means the beacon is prepended', () => {
+test('rewriteHtml: no <head> means the beacon is prepended', async () => {
 	expect(rewriteHtml('<p>x</p>', {}).startsWith(BEACON)).toBe(true);
 });
 
-test('rewriteHtml: uppercase <HEAD> matches and gets beacon', () => {
+test('rewriteHtml: uppercase <HEAD> matches and gets beacon', async () => {
 	const html = `<HTML><HEAD><title>x</title></HEAD><body>text</body></HTML>`;
 	const out = rewriteHtml(html, {});
 	expect(out.indexOf(BEACON)).toBe(out.indexOf('<HEAD>') + '<HEAD>'.length);
 });
 
-test('blocked: any decoded, case-folded segment; *.php suffix', () => {
+test('blocked: any decoded, case-folded segment; *.php suffix', async () => {
 	for (const p of ['/panel', '/PANEL/x', '/%70anel', '/index.php/panel', '/api/x', '/x.php', '/%zz']) expect(blocked(p, ['panel', 'api', '*.php'])).toBe(true);
 	for (const p of ['/', '/panelist', '/about']) expect(blocked(p, ['panel', 'api', '*.php'])).toBe(false);
 });
@@ -131,7 +131,7 @@ test('proxy: rewrites Location header on redirects', async () => {
 	expect(res.headers.get('location')).not.toContain('localhost:' + upstream.port);
 });
 
-test('blocked: parser-differential with repeated decode, segment split, trim', () => {
+test('blocked: parser-differential with repeated decode, segment split, trim', async () => {
 	const rules = ['panel', 'api', '*.php'];
 	// Repeated decode (max 5)
 	expect(blocked('/%2570anel', rules)).toBe(true); // %25 = %, so %2570 = %70 = p
