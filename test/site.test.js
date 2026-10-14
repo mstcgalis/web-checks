@@ -81,3 +81,26 @@ slow('startSite gives up on a server that accepts but never answers', async () =
 		process.chdir(cwd);
 	}
 }, 20_000);
+
+test('startSite keeps a running server quiet, and shows its last lines if it dies mid-run', async () => {
+	const dir = mkdtempSync(join(tmpdir(), 'wdk-dies-'));
+	writeFileSync(join(dir, 'justfile'), "serve-at PORT:\n    bun -e 'Bun.serve({ port: {{PORT}}, fetch: () => (console.error(\"access log\"), new Response(\"ok\")) }); setTimeout(() => (console.error(\"dying\"), process.exit(1)), 1500)'\n");
+	const cwd = process.cwd();
+	const write = process.stderr.write;
+	let err = '';
+	process.chdir(dir);
+	process.stderr.write = (d) => ((err += d), true);
+	try {
+		const site = await startSite();
+		await fetch(site.origin);
+		await Bun.sleep(200);
+		expect(err).toBe('');
+		await Bun.sleep(1800);
+		expect(err).toContain('`just serve-at` exited mid-run');
+		expect(err).toContain('dying');
+		site.stop();
+	} finally {
+		process.stderr.write = write;
+		process.chdir(cwd);
+	}
+}, 15_000);
