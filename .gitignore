@@ -2,3 +2,4 @@ node_modules/
 .wdk/
 result
 .direnv/
+.release-projects

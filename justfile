@@ -17,3 +17,7 @@ hash:
 # after pushing a release tag: point the templates' workflow pins and flake.lock at it, so new projects get this wdk
 lock-templates:
     for t in templates/*/; do (cd "$t" && bun ../../bin/wdk.js update); done
+
+# test, tag, push, lock templates, re-pin and push the projects in .release-projects (pushes deploy)
+release VERSION:
+    scripts/release.sh {{VERSION}}

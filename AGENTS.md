@@ -26,10 +26,11 @@ accessibility, performance and compatibility. Every change serves that goal.
 
 ## Releasing wdk
 
-1. Bump `version` in `package.json` (the version source), commit `chore(release): vX.Y.Z`.
-2. Fast-forward `main`, tag `vX.Y.Z` from `main`, push both and the tag.
-3. `just lock-templates` and commit, so new projects start on this release. Projects pick it up with
-   `wdk update` or their weekly `update.yml` PR.
+`just release X.Y.Z` on a clean `web-kit`: runs every test, bumps `package.json` (the version source),
+commits `chore(release): vX.Y.Z`, fast-forwards `main`, tags, pushes, then locks the templates so new
+projects start on it. Each project listed in `.release-projects` (gitignored, one path per line) is then
+moved to the release, committed and pushed (a push deploys it). Other projects pick it up with `wdk update`
+or their weekly `update.yml` PR.
 
 ## Docs
 
