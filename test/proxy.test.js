@@ -1,5 +1,7 @@
 import { afterAll, expect, test } from 'bun:test';
+import { launch } from '../lib/engines.js';
 import { BEACON, blocked, parseOff, rewriteHtml, startProxy } from '../lib/proxy.js';
+import { slow } from './run.js';
 
 const knobs = { spin: { css: '.spin{animation:none}', probe: '.spin' }, ticker: { script: 'ticker' } };
 const PNG = new Uint8Array([137, 80, 78, 71, 0, 1, 2, 255]);
@@ -186,3 +188,20 @@ test('an upstream that never answers times out as a 504 and an error', async () 
 	expect(slow.errors.at(-1).msg).toContain('timed out');
 	slow.stop();
 });
+
+slow('the beacon names the file and line of a script error', async () => {
+	const site = Bun.serve({ port: 0, fetch: (r) => new URL(r.url).pathname === '/bad.js'
+		? new Response('\n@x', { headers: { 'content-type': 'text/javascript' } })
+		: new Response('<html><head><script src="/bad.js"></script></head></html>', { headers: { 'content-type': 'text/html' } }) });
+	const p = startProxy({ origin: `http://localhost:${site.port}` });
+	const browser = await launch('chromium');
+	try {
+		await (await browser.newPage()).goto(p.url + '/');
+		for (let i = 0; i < 50 && !p.errors.length; i++) await Bun.sleep(50);
+		expect(p.errors[0].msg).toEndWith('(/bad.js:2)');
+	} finally {
+		await browser.close();
+		p.stop();
+		site.stop(true);
+	}
+}, 30_000);
