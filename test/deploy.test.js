@@ -16,7 +16,10 @@ function setup({ config = '', git = true, dist = true, sshExit = 0, manifestExit
 	if (manifest) writeFileSync(join(dir, 'manifest-out'), manifest);
 	writeFileSync(join(dir, 'wdk.config.js'), `export default ${config || '{}'};`);
 	if (git) {
-		for (const c of [['init', '-q'], ['add', '-A'], ['-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'x']]) Bun.spawnSync(['git', ...c], { cwd: dir });
+		for (const c of [['init', '-q'], ['add', '-A'], ['-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'x']]) {
+			const r = Bun.spawnSync(['git', ...c], { cwd: dir });
+			if (r.exitCode) throw new Error(`git ${c.at(-3)}: ${r.stderr}`);
+		}
 	}
 	const bin = join(dir, 'bin');
 	mkdirSync(bin);
