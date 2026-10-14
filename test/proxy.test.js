@@ -205,3 +205,16 @@ slow('the beacon names the file and line of a script error', async () => {
 		site.stop(true);
 	}
 }, 30_000);
+
+test('proxy: an upstream that cuts off mid-body gives 502 and a proxy error', async () => {
+	// Promises 100 bytes, sends 4, hangs up.
+	const cut = Bun.listen({ hostname: 'localhost', port: 0, socket: { data(sock) { sock.end('HTTP/1.1 200 OK\r\ncontent-type: text/javascript\r\ncontent-length: 100\r\n\r\nhalf'); } } });
+	const p = startProxy({ origin: `http://localhost:${cut.port}` });
+	try {
+		expect((await fetch(p.url + '/x.js')).status).toBe(502);
+		expect(p.errors[0].msg).toContain('/x.js cut off mid-body');
+	} finally {
+		p.stop();
+		cut.stop(true);
+	}
+});
