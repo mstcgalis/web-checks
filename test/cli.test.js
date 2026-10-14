@@ -63,6 +63,15 @@ test('check passes clean pages and skips compat without compat.css', () => {
 	expect(r.code).toBe(0);
 }, 60_000);
 
+test('check reports a compat config that cannot be checked as broken setup, and still runs the rest', () => {
+	const dir = project({ config: { compat: { css: ['site/*.css'], targets: 'bogus browser' } } });
+	writeFileSync(join(dir, 'site', 'a.css'), 'a{color:red}');
+	const r = inDir(dir, ['check']);
+	expect(r.out).toMatch(/^✗ compat .*bogus/m);
+	expect(r.out).toContain('✓ smoke ');
+	expect(r.code).toBe(2);
+}, 60_000);
+
 test('doctor passes the fixture', () => {
 	const r = wdk(['doctor']);
 	expect(r.out).toContain('✓ compat.css matches 1 file(s)');
