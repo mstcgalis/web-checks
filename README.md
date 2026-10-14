@@ -20,7 +20,7 @@ works the minute you `cd` into it.
 | | wdk | Hand-rolled (Lighthouse + Playwright + axe + scripts) |
 |---|---|---|
 | Agent cost | Short output: findings only, one summary line per check | Long reports the agent must read and filter |
-| Speed | `check` runs compat, smoke and a11y concurrently on **one** server and **one** crawl | Separate tools, each starting a server and crawling again |
+| Speed | `check` runs compat, smoke and a11y on **one** server and **one** crawl; axe runs in smoke's own Chromium visit, engines side by side | Separate tools, each starting a server and crawling again |
 | Setup | `nix flake init`, `direnv allow`, done; pinned versions, same on every machine and in CI | Per-project install and version drift |
 | Downloads | Uses Chrome if installed; fetches only the browsers your config needs, once | Playwright pulls its own browsers per project |
 | Errors | Exit 2 means setup is broken, and the message says the fix; `wdk doctor` lists every gap | Stack traces |
@@ -35,14 +35,14 @@ Every command exits `0` pass, `1` findings, `2` broken setup, so it drops into C
 flowchart LR
   serve["just serve-at PORT<br/>(any stack)"] --> crawl[crawl from pages.start]
   serve --> proxy["proxy<br/>error beacon, blocks"]
-  crawl --> a11y["a11y<br/>axe-core"]
-  crawl --> smoke["smoke<br/>each engine"]
-  proxy --> smoke & a11y
+  crawl --> smoke["smoke<br/>each engine, side by side"]
+  proxy --> smoke
+  smoke --> a11y["a11y<br/>axe-core, in the Chromium visit"]
   css[compat.css globs] --> compat["compat<br/>doiuse"]
   a11y & smoke & compat --> out["one summary line each<br/>exit 0 / 1 / 2"]
 ```
 
-One server, one crawl, three checks side by side. wdk never knows the stack: it only calls
+One server, one crawl, one browser visit per page and engine. wdk never knows the stack: it only calls
 `serve-at`, so adding a stack costs nothing.
 
 ## Start
