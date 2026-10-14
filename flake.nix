@@ -56,7 +56,16 @@
         default = wdk;
       } // pkgs.lib.optionalAttrs pkgs.stdenv.isLinux {
         # Fetched by lib/browsers.js only when a command launches a browser.
-        playwright-browsers = nixpkgs-browsers.legacyPackages.${pkgs.stdenv.hostPlatform.system}.playwright-driver.browsers;
+        # The npm playwright drives these browsers only at the same version: a `nix flake update`
+        # that moves unstable must fail here, by name, not as a browser that will not launch.
+        playwright-browsers =
+          let
+            driver = nixpkgs-browsers.legacyPackages.${pkgs.stdenv.hostPlatform.system}.playwright-driver;
+            npm = (builtins.fromJSON (builtins.readFile ./package.json)).dependencies.playwright;
+          in
+          assert pkgs.lib.assertMsg (driver.version == npm)
+            "nixpkgs-browsers has playwright-driver ${driver.version}, package.json pins playwright ${npm}: pin the same version in both";
+          driver.browsers;
         mesa = nixpkgs-browsers.legacyPackages.${pkgs.stdenv.hostPlatform.system}.mesa;
       } // pkgs.lib.optionalAttrs pkgs.stdenv.isDarwin {
         firefox-esr-115 = pkgs.stdenvNoCC.mkDerivation rec {
