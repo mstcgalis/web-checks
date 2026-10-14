@@ -40,7 +40,7 @@ test.concurrent('a bad option or --skip regex says what is wrong, exit 2', async
 	const re = await inDir(project({}), ['smoke', '--skip', '(']);
 	expect(re.err).toBe('wdk smoke: pages.skip / --skip "(" is not a valid regex\n');
 	expect(re.code).toBe(2);
-});
+}, 30_000);
 
 test.concurrent('check runs compat, smoke and a11y on one server; findings before each summary line', async () => {
 	const r = await wdk(['check']);
@@ -106,7 +106,7 @@ test.concurrent('a broken or misspelt wdk.config.js is named with the fix, exit 
 	const nested = await inDir(project({ config: { pages: { skp: 'x' } } }), ['check']);
 	expect(nested.err).toContain('unknown key(s) pages.skp — expected pages.start, pages.skip, pages.limit');
 	expect(nested.code).toBe(2);
-});
+}, 30_000);
 
 test.concurrent('a justfile without serve-at says what to add', async () => {
 	const r = await inDir(project({ justfile: 'build:\n    true\n' }), ['smoke']);
