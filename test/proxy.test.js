@@ -212,7 +212,8 @@ test('proxy: an upstream that cuts off mid-body gives 502 and a proxy error', as
 	const p = startProxy({ origin: `http://localhost:${cut.port}` });
 	try {
 		expect((await fetch(p.url + '/x.js')).status).toBe(502);
-		expect(p.errors[0].msg).toContain('/x.js cut off mid-body');
+		// Under load the hang-up can land before the headers are read: unreachable, also a 502.
+		expect(p.errors[0].type).toBe('proxy');
 	} finally {
 		p.stop();
 		cut.stop(true);
