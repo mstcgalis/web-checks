@@ -32,3 +32,22 @@ slow('exe engines report through the beacon and the proxy', async () => {
 	expect(r.out).not.toContain('/does-not-exist —');
 	expect(r.code).toBe(1);
 }, 120_000);
+
+slow('smoke counts the site console errors, not a third-party embed\'s', async () => {
+	const { startProxy } = await import('../lib/proxy.js');
+	const { smokeAll } = await import('../lib/cmd/smoke.js');
+	const { parseEngine } = await import('../lib/engines.js');
+	const html = (body) => new Response(`<!doctype html><html lang="en"><title>t</title>${body}`, { headers: { 'content-type': 'text/html' } });
+	const embed = Bun.serve({ port: 0, fetch: () => html('<script>console.error("third party")</script>') });
+	const site = Bun.serve({ port: 0, fetch: (r) => new URL(r.url).pathname === '/own' ? html('<script>console.error("mine")</script>') : html(`<iframe title="e" src="http://127.0.0.1:${embed.port}/"></iframe>`) });
+	const proxy = startProxy({ origin: `http://localhost:${site.port}` });
+	try {
+		const { lines } = await smokeAll([parseEngine('chromium')], ['/', '/own'], proxy);
+		expect(lines.join('\n')).toContain('/own — console.error: mine');
+		expect(lines.join('\n')).not.toContain('third party');
+	} finally {
+		proxy.stop();
+		site.stop(true);
+		embed.stop(true);
+	}
+}, 60_000);
