@@ -112,7 +112,8 @@ commit ships.
 host key (only if it matches `~/.ssh/known_hosts`: `ssh HOST` once first), `deploy.host` = `<domain with - for .>-deploy@HOST`, and the
 `services.sites."D"` entry as a PR in the vps repo (`$WDK_VPS_REPO`, default `~/src/vps`; printed if there is none):
 a new `nix/modules/<slug>.nix` imported by the production host, on `tls internal` (tunnel-only), no www for a
-subdomain. It is made in a temp worktree, so your vps checkout is untouched. Merge it and `just deploy-production`.
+subdomain, plus its `tofu/dns` record (a tunnel CNAME, and www for an apex; the zone must already be on Cloudflare).
+It is made in a temp worktree, so your vps checkout is untouched. Merge it and `just deploy-production`.
 The private key exists only in the secret.
 
 By hand: `wdk deploy` (`--no-build`, `--build-only`, `--host`), `wdk deploy rollback`, `wdk deploy list`.

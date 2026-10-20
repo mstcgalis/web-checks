@@ -8,17 +8,16 @@ is decided or known but **not built**; done work lives in git history and
 ```mermaid
 flowchart LR
   checks["checks<br/>built"] --> stacks["stack templates<br/>built"] --> deploy["release deploys<br/>built"]
-  deploy --> new["wdk new<br/>repo, secrets, key"] --> vps["vps: entry PR, DNS, secrets, content sync<br/>open"]
+  deploy --> new["wdk new<br/>repo, secrets, key"] --> vps["vps: secrets, content sync<br/>open"]
 ```
 
 The CLI comes last: it only orchestrates modules that already exist.
 
 ## Bootstrap CLI: the rest of `wdk new`
 
-Built: template, git, GitHub repo, secrets, deploy key and config, vps site entry PR; idempotent re-runs. Missing:
+Built: template, git, GitHub repo, secrets, deploy key and config, vps site entry and DNS PR; idempotent re-runs. Missing:
 
 - **Wait for the switch** after the vps site entry PR: `just deploy-production` is by hand.
-- **DNS** records PR in vps `tofu/dns` from `--domain`. Registrar purchase is out of scope.
 - **Staging**: a `staging` branch and its own site entry and key when the site opts in.
 - **First deploy**, then print the URLs.
 - **Prompts** as a thin layer over the flags, if agents are not the only users.
@@ -28,7 +27,6 @@ Built: template, git, GitHub repo, secrets, deploy key and config, vps site entr
 - **Secrets** through sops per site entry (Kirby license, mail credentials).
 - **Content sync** (sonda's `content.just`, `docs/server-contract.md`) generalised for stateful
   stacks: pull-first, dry-run, path-scoped push, merge-only.
-- **DNS** through `tofu/dns`: one record set per site, from the same site entry.
 
 ## Stacks and conventions
 
