@@ -114,7 +114,9 @@ host key (only if it matches `~/.ssh/known_hosts`: `ssh HOST` once first), `depl
 a new `nix/modules/<slug>.nix` imported by the production host, on `tls internal` (tunnel-only), no www for a
 subdomain, plus its `tofu/dns` record (a tunnel CNAME, and www for an apex; the zone must already be on Cloudflare).
 It is made in a temp worktree, so your vps checkout is untouched. Merge it and `just deploy-production`.
-The private key exists only in the secret.
+`--staging` adds `staging.D` (user `stg-<slug>-deploy`, no www, `X-Robots-Tag: noindex`) to the same PR, with
+its own key in `STAGING_DEPLOY_SSH_KEY`, a `deploy-staging.yml` and a `staging` branch; re-run with it to add
+staging to an existing project. The private keys exist only in the secrets.
 
 By hand: `wdk deploy` (`--no-build`, `--build-only`, `--host`), `wdk deploy rollback`, `wdk deploy list`.
 

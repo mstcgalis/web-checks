@@ -41,6 +41,18 @@ function wdkNew(root, args, env = {}) {
 	return { code: r.exitCode, out: r.stdout.toString(), err: r.stderr.toString() };
 }
 const log = (dir) => Bun.spawnSync(['git', 'log', '--format=%s'], { cwd: dir }).stdout.toString().trim().split('\n');
+const g = (cwd, ...a) => Bun.spawnSync(['git', '-C', cwd, ...a], { env: { ...process.env, GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@t' } }).stdout.toString().trim();
+// A vps repo at ~/src/vps with the files `wdk new` edits, pushed to a bare origin (root/vps.git).
+function vpsRepo(root, tfvars) {
+	const vps = join(root, 'src', 'vps');
+	for (const d of ['nix/hosts/production', 'nix/modules', 'tofu/dns']) mkdirSync(join(vps, d), { recursive: true });
+	writeFileSync(join(vps, 'nix/hosts/production/default.nix'), '{ ... }:\n{\n  imports = [\n    ../../modules/site.nix\n  ];\n}\n');
+	writeFileSync(join(vps, 'nix/modules/site.nix'), '{ }\n');
+	writeFileSync(join(vps, 'tofu/dns/dns.auto.tfvars'), tfvars);
+	g(root, 'init', '-q', '--bare', '-b', 'main', join(root, 'vps.git'));
+	for (const a of [['init', '-q', '-b', 'main'], ['add', '-A'], ['commit', '-qm', 'init'], ['remote', 'add', 'origin', join(root, 'vps.git')], ['push', '-q', 'origin', 'main']]) g(vps, ...a);
+	return { vps, bare: join(root, 'vps.git') };
+}
 
 test('new: template pinned to this wdk, committed, on GitHub, secrets set, deploy configured; a re-run does nothing', async () => {
 	const root = setup();
@@ -123,25 +135,11 @@ test('new pins the host key only if ~/.ssh/known_hosts already trusts it', async
 
 test('new with a vps repo: the site entry is a PR from a worktree, the user tree untouched', async () => {
 	const root = setup();
-	const g = (cwd, ...a) => Bun.spawnSync(['git', '-C', cwd, ...a], { env: { ...process.env, GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@t' } }).stdout.toString().trim();
-	const vps = join(root, 'src', 'vps');
-	mkdirSync(join(vps, 'nix', 'hosts', 'production'), { recursive: true });
-	mkdirSync(join(vps, 'nix', 'modules'));
-	writeFileSync(join(vps, 'nix', 'modules', 'site.nix'), '{ }\n');
-	writeFileSync(join(vps, 'nix', 'hosts', 'production', 'default.nix'), '{ ... }:\n{\n  imports = [\n    ../../modules/site.nix\n  ];\n}\n');
-	mkdirSync(join(vps, 'tofu', 'dns'), { recursive: true });
-	writeFileSync(join(vps, 'tofu', 'dns', 'dns.auto.tfvars'), 'domains = {\n  "a.sk" = {\n    zone        = "a.sk"\n    record_name = "@"\n    tunnel      = true\n  }\n}\n\nwww_redirect_domains = ["a.sk"]');
-	g(root, 'init', '-q', '--bare', '-b', 'main', join(root, 'vps.git'));
-	g(vps, 'init', '-q', '-b', 'main');
-	g(vps, 'add', '-A');
-	g(vps, 'commit', '-qm', 'init');
-	g(vps, 'remote', 'add', 'origin', join(root, 'vps.git'));
-	g(vps, 'push', '-q', 'origin', 'main');
+	const { vps, bare } = vpsRepo(root, 'domains = {\n  "a.sk" = {\n    zone        = "a.sk"\n    record_name = "@"\n    tunnel      = true\n  }\n}\n\nwww_redirect_domains = ["a.sk"]');
 	const r = wdkNew(root, ['kirby', 'site', '--domain', 'k.example.com', '--vps', 'vps.test']);
 	expect(r.err).toBe('');
 	expect(r.out).toContain('vps: https://github.com/me/vps/pull/1');
 	expect(readFileSync(join(root, 'gh.log'), 'utf8')).toContain('pr create --fill --head site/k-example-com');
-	const bare = join(root, 'vps.git');
 	expect(g(bare, 'log', '--format=%s', 'site/k-example-com')).toBe('feat(sites): k.example.com, from wdk new\ninit');
 	expect(g(bare, 'show', 'site/k-example-com:nix/hosts/production/default.nix')).toContain('../../modules/site.nix\n    ../../modules/k-example-com.nix\n  ];');
 	const mod = g(bare, 'show', 'site/k-example-com:nix/modules/k-example-com.nix');
@@ -162,18 +160,45 @@ test('new with a vps repo: the site entry is a PR from a worktree, the user tree
 
 test('new with a vps repo, apex domain: www vhost on tls internal and a www record', async () => {
 	const root = setup();
-	const g = (cwd, ...a) => Bun.spawnSync(['git', '-C', cwd, ...a], { env: { ...process.env, GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@t' } }).stdout.toString().trim();
-	const vps = join(root, 'src', 'vps');
-	for (const d of ['nix/hosts/production', 'nix/modules', 'tofu/dns']) mkdirSync(join(vps, d), { recursive: true });
-	writeFileSync(join(vps, 'nix/hosts/production/default.nix'), '{\n  imports = [\n    ../../modules/site.nix\n  ];\n}\n');
-	writeFileSync(join(vps, 'nix/modules/site.nix'), '{ }\n');
-	writeFileSync(join(vps, 'tofu/dns/dns.auto.tfvars'), 'domains = {\n}\n\nwww_redirect_domains = ["a.sk"]');
-	g(root, 'init', '-q', '--bare', '-b', 'main', join(root, 'vps.git'));
-	for (const a of [['init', '-q', '-b', 'main'], ['add', '-A'], ['commit', '-qm', 'init'], ['remote', 'add', 'origin', join(root, 'vps.git')], ['push', '-q', 'origin', 'main']]) g(vps, ...a);
+	vpsRepo(root, 'domains = {\n}\n\nwww_redirect_domains = ["a.sk"]');
 	const r = wdkNew(root, ['static', 'site', '--domain', 'example.com', '--vps', 'vps.test']);
 	expect(r.err).toBe('');
 	const show = (f) => g(join(root, 'vps.git'), 'show', `site/example-com:${f}`);
 	expect(show('nix/modules/example-com.nix')).toContain('lib.genAttrs [ "example.com" "www.example.com" ]');
 	expect(show('nix/modules/example-com.nix')).toContain('services.sites."example.com" = {\n    deployKey = ');
 	expect(show('tofu/dns/dns.auto.tfvars')).toBe('domains = {\n  "example.com" = {\n    zone        = "example.com"\n    record_name = "@"\n    tunnel      = true\n  }\n}\n\nwww_redirect_domains = ["a.sk", "example.com"]');
+});
+
+test('new --staging: staging.<domain> from a staging branch, its own key and vps entry; added to an existing project too', async () => {
+	const root = setup();
+	const { bare } = vpsRepo(root, 'domains = {\n}\n\nwww_redirect_domains = []');
+	const dir = join(root, 'site');
+	expect(wdkNew(root, ['static', 'site', '--domain', 'example.com', '--vps', 'vps.test']).code).toBe(0);
+	expect(wdkNew(root, ['static', 'x', '--staging']).err).toContain('--staging needs --domain');
+
+	// Opting in later: only staging is new.
+	const r = wdkNew(root, ['static', 'site', '--domain', 'example.com', '--vps', 'vps.test', '--staging']);
+	expect(r.err).toBe('');
+	expect(r.out).toContain('secret: STAGING_DEPLOY_SSH_KEY');
+	expect(r.out).not.toContain('secret: DEPLOY_SSH_KEY');
+	expect(r.out).toContain('push: staging');
+	const wf = readFileSync(join(dir, '.github/workflows/deploy-staging.yml'), 'utf8');
+	const { version } = JSON.parse(readFileSync(join(import.meta.dir, '..', 'package.json'), 'utf8'));
+	expect(wf).toContain(`deploy.yml@v${version}\n    with:\n      host: stg-example-com-deploy@vps.test\n      url: https://staging.example.com/`);
+	expect(wf).toContain('DEPLOY_SSH_KEY: ${{ secrets.STAGING_DEPLOY_SSH_KEY }}');
+	expect(log(dir)[0]).toBe('chore: deploy staging to stg-example-com-deploy@vps.test');
+	expect(g(join(root, 'remote.git'), 'rev-parse', 'staging')).toBe(g(dir, 'rev-parse', 'HEAD'));
+	const mod = g(bare, 'show', 'site/stg-example-com:nix/modules/stg-example-com.nix');
+	expect(mod).toContain('services.sites."staging.example.com" = {\n    www = false;\n    slug = "stg-example-com";\n    # Unreleased work is never crawled.\n    extraConfig = \'\'header X-Robots-Tag "noindex, nofollow"\'\';\n    deployKey = "ssh-ed25519 ');
+	expect(mod).toContain(' stg-example-com-deploy"');
+	expect(g(bare, 'show', 'site/stg-example-com:tofu/dns/dns.auto.tfvars')).toContain('record_name = "staging"');
+	expect(g(bare, 'log', '--format=%s', '-1', 'site/stg-example-com')).toBe('feat(sites): staging.example.com, from wdk new');
+
+	// One run with both: one PR, two modules.
+	const both = setup();
+	const v2 = vpsRepo(both, 'domains = {\n}\n\nwww_redirect_domains = []');
+	expect(wdkNew(both, ['static', 'site', '--domain', 'example.com', '--vps', 'vps.test', '--staging']).err).toBe('');
+	expect(g(v2.bare, 'log', '--format=%s', '-1', 'site/example-com')).toBe('feat(sites): example.com, staging.example.com, from wdk new');
+	expect(g(v2.bare, 'show', 'site/example-com:nix/hosts/production/default.nix')).toContain('example-com.nix\n    ../../modules/stg-example-com.nix\n  ];');
+	expect(g(v2.bare, 'show', 'site/example-com:tofu/dns/dns.auto.tfvars')).toEndWith('www_redirect_domains = ["example.com"]');
 });

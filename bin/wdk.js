@@ -14,7 +14,7 @@ reports: exit 0
   perf               CPU per perf knob (macOS)
 
 setup
-  new STACK DIR      a project from a template, on GitHub with its secrets; --domain D --vps HOST adds the deploy
+  new STACK DIR      a project from a template, on GitHub with its secrets; --domain D --vps HOST adds the deploy (--staging: staging.D too)
   doctor             what is missing, and the command that fixes it
   update [--tag vX]  move the project to the latest wdk release (workflow pins and flake.lock)
   deploy [rollback|list]  stream the build to the host's restricted key; rollback, list
