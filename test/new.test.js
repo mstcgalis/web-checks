@@ -21,6 +21,7 @@ case "$1 $2" in
   "secret list") ls "${root}/secrets" ;;
   "secret set") cat > "${root}/secrets/$3" ;;
   "pr create") echo "https://github.com/me/vps/pull/1" ;;
+  "run list") echo "41 failure" ;;
   "pr list") if grep -q "pr create" "${root}/gh.log"; then echo "https://github.com/me/vps/pull/1"; fi ;;
 esac
 `);
@@ -36,7 +37,7 @@ esac
 function wdkNew(root, args, env = {}) {
 	const r = Bun.spawnSync(['bun', WDK, 'new', ...args], {
 		cwd: root,
-		env: { ...process.env, PATH: `${join(root, 'bin')}:${process.env.PATH}`, HOME: root, NIX_ACCESS_TOKEN: '', WDK_VPS_REPO: '', GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@t', ...env },
+		env: { ...process.env, PATH: `${join(root, 'bin')}:${process.env.PATH}`, HOME: root, NIX_ACCESS_TOKEN: '', WDK_VPS_REPO: '', WDK_NEW_ORIGIN: 'http://127.0.0.1:9', GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@t', ...env },
 	});
 	return { code: r.exitCode, out: r.stdout.toString(), err: r.stderr.toString() };
 }
@@ -75,7 +76,7 @@ test('new: template pinned to this wdk, committed, on GitHub, secrets set, deplo
 
 	const again = wdkNew(root, ['static', 'site', '--domain', 'example.com', '--vps', 'vps.test'], { NIX_ACCESS_TOKEN: 'other' });
 	expect(again.code).toBe(0);
-	expect(again.out).toBe('template: site has one\n');
+	expect(again.out).toBe('template: site has one\nnot live yet: https://example.com/ (merge the vps PR, `just deploy-production`, then re-run this to deploy)\n');
 	expect(secret('NIX_ACCESS_TOKEN')).toBe('tok');
 	expect(log(dir)).toHaveLength(2);
 });
@@ -201,4 +202,26 @@ test('new --staging: staging.<domain> from a staging branch, its own key and vps
 	expect(g(v2.bare, 'log', '--format=%s', '-1', 'site/example-com')).toBe('feat(sites): example.com, staging.example.com, from wdk new');
 	expect(g(v2.bare, 'show', 'site/example-com:nix/hosts/production/default.nix')).toContain('example-com.nix\n    ../../modules/stg-example-com.nix\n  ];');
 	expect(g(v2.bare, 'show', 'site/example-com:tofu/dns/dns.auto.tfvars')).toEndWith('www_redirect_domains = ["example.com"]');
+});
+
+test('new after the vps switch: a site on the seed page gets its failed deploy re-run, a deployed one is live', async () => {
+	const root = setup();
+	// Its own process: wdkNew blocks this one. Static seed, kirby seed (php-fpm's 404), deployed.
+	const port = 40000 + Math.floor(Math.random() * 20000);
+	const srv = Bun.spawn(['bun', '-e', `Bun.serve({ port: ${port}, fetch(r) {
+		const d = new URL(r.url).pathname.split('/')[1];
+		return d === 'example.com' ? new Response('deploying\\n') : d === 'k.sk' ? new Response('File not found.\\n', { status: 404 }) : new Response('<html>');
+	} }); console.log('up')`], { stdout: 'pipe' });
+	try {
+		await srv.stdout.getReader().read();
+		const env = { WDK_NEW_ORIGIN: `http://127.0.0.1:${port}` };
+		const r = wdkNew(root, ['static', 'site', '--domain', 'example.com', '--vps', 'vps.test', '--staging'], env);
+		expect(r.err).toBe('');
+		expect(r.out).toContain('deploy: re-ran deploy.yml (the vps entry is live now); https://example.com/ in a minute');
+		expect(r.out).toContain('live: https://staging.example.com/');
+		expect(readFileSync(join(root, 'gh.log'), 'utf8')).toContain('run rerun 41 --failed');
+		expect(wdkNew(setup(), ['kirby', 'k', '--domain', 'k.sk', '--vps', 'vps.test'], env).out).toContain('deploy: re-ran deploy.yml');
+	} finally {
+		srv.kill();
+	}
 });

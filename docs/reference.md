@@ -118,6 +118,10 @@ It is made in a temp worktree, so your vps checkout is untouched. Merge it and `
 its own key in `STAGING_DEPLOY_SSH_KEY`, a `deploy-staging.yml` and a `staging` branch; re-run with it to add
 staging to an existing project. The private keys exist only in the secrets.
 
+Each run ends with every site's state: `live: URL`, or `not live yet` until the vps entry is switched in. The
+first deploy fails before that (no deploy user yet); re-run `wdk new` after the switch and it re-runs the failed
+deploy, seeing the vps seed page.
+
 By hand: `wdk deploy` (`--no-build`, `--build-only`, `--host`), `wdk deploy rollback`, `wdk deploy list`.
 
 **Kirby** (`kind = "kirby"`): mutable state lives in `shared/`, set by the PHP-FPM pool's
