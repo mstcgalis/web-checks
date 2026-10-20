@@ -54,7 +54,7 @@ just check                                               # compat + smoke + a11y
 ```
 
 `wdk new` copies the template, commits, creates a private GitHub repo and sets its CI secrets;
-`--domain example.com --vps HOST` also makes a deploy key and prints the vps site entry to add.
+`--domain example.com --vps HOST` also makes a deploy key and opens the vps site entry as a PR.
 Re-running it finishes whatever step failed. Offline or no GitHub: `--no-github`, or
 `nix flake init -t github:mstcgalis/web-dev-kit#static`.
 

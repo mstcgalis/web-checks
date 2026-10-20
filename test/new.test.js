@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -20,6 +20,8 @@ case "$1 $2" in
   "repo view") echo me/site ;;
   "secret list") ls "${root}/secrets" ;;
   "secret set") cat > "${root}/secrets/$3" ;;
+  "pr create") echo "https://github.com/me/vps/pull/1" ;;
+  "pr list") if grep -q "pr create" "${root}/gh.log"; then echo "https://github.com/me/vps/pull/1"; fi ;;
 esac
 `);
 	Bun.spawnSync(['ssh-keygen', '-q', '-t', 'ed25519', '-N', '', '-f', join(root, 'hostkey')]);
@@ -34,7 +36,7 @@ esac
 function wdkNew(root, args, env = {}) {
 	const r = Bun.spawnSync(['bun', WDK, 'new', ...args], {
 		cwd: root,
-		env: { ...process.env, PATH: `${join(root, 'bin')}:${process.env.PATH}`, HOME: root, NIX_ACCESS_TOKEN: '', GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@t', ...env },
+		env: { ...process.env, PATH: `${join(root, 'bin')}:${process.env.PATH}`, HOME: root, NIX_ACCESS_TOKEN: '', WDK_VPS_REPO: '', GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@t', ...env },
 	});
 	return { code: r.exitCode, out: r.stdout.toString(), err: r.stderr.toString() };
 }
@@ -117,4 +119,40 @@ test('new pins the host key only if ~/.ssh/known_hosts already trusts it', async
 	}
 	writeFileSync(kh, real);
 	expect(wdkNew(root, args).out).toContain('host key: matches ~/.ssh/known_hosts');
+});
+
+test('new with a vps repo: the site entry is a PR from a worktree, the user tree untouched', async () => {
+	const root = setup();
+	const g = (cwd, ...a) => Bun.spawnSync(['git', '-C', cwd, ...a], { env: { ...process.env, GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@t' } }).stdout.toString().trim();
+	const vps = join(root, 'src', 'vps');
+	mkdirSync(join(vps, 'nix', 'hosts', 'production'), { recursive: true });
+	mkdirSync(join(vps, 'nix', 'modules'));
+	writeFileSync(join(vps, 'nix', 'modules', 'site.nix'), '{ }\n');
+	writeFileSync(join(vps, 'nix', 'hosts', 'production', 'default.nix'), '{ ... }:\n{\n  imports = [\n    ../../modules/site.nix\n  ];\n}\n');
+	g(root, 'init', '-q', '--bare', '-b', 'main', join(root, 'vps.git'));
+	g(vps, 'init', '-q', '-b', 'main');
+	g(vps, 'add', '-A');
+	g(vps, 'commit', '-qm', 'init');
+	g(vps, 'remote', 'add', 'origin', join(root, 'vps.git'));
+	g(vps, 'push', '-q', 'origin', 'main');
+	const r = wdkNew(root, ['kirby', 'site', '--domain', 'k.example.com', '--vps', 'vps.test']);
+	expect(r.err).toBe('');
+	expect(r.out).toContain('vps: https://github.com/me/vps/pull/1');
+	expect(readFileSync(join(root, 'gh.log'), 'utf8')).toContain('pr create --fill --head site/k-example-com');
+	const bare = join(root, 'vps.git');
+	expect(g(bare, 'log', '--format=%s', 'site/k-example-com')).toBe('feat(sites): k.example.com, from wdk new\ninit');
+	expect(g(bare, 'show', 'site/k-example-com:nix/hosts/production/default.nix')).toContain('../../modules/site.nix\n    ../../modules/k-example-com.nix\n  ];');
+	const mod = g(bare, 'show', 'site/k-example-com:nix/modules/k-example-com.nix');
+	expect(mod).toContain('lib.genAttrs [ "k.example.com" ]');
+	expect(mod).toContain('services.sites."k.example.com" = {\n    www = false;\n    kind = "kirby";\n    deployKey = "ssh-ed25519 ');
+	expect(g(vps, 'status', '--porcelain')).toBe('');
+	expect(g(vps, 'rev-parse', '--abbrev-ref', 'HEAD')).toBe('main');
+	expect(g(vps, 'worktree', 'list').split('\n')).toHaveLength(1);
+	expect(existsSync(join(root, 'secrets', 'DEPLOY_SSH_KEY'))).toBe(true);
+
+	// Secrets lost after the PR: the re-run updates the open PR with the new key instead of making another.
+	rmSync(join(root, 'secrets', 'DEPLOY_SSH_KEY'));
+	expect(wdkNew(root, ['kirby', 'site', '--domain', 'k.example.com', '--vps', 'vps.test']).out).toContain('vps: https://github.com/me/vps/pull/1');
+	expect(readFileSync(join(root, 'gh.log'), 'utf8').match(/pr create/g)).toHaveLength(1);
+	expect(g(bare, 'show', 'site/k-example-com:nix/modules/k-example-com.nix')).not.toBe(mod);
 });

@@ -15,9 +15,9 @@ The CLI comes last: it only orchestrates modules that already exist.
 
 ## Bootstrap CLI: the rest of `wdk new`
 
-Built: template, git, GitHub repo, secrets, deploy key and config; idempotent re-runs. Missing:
+Built: template, git, GitHub repo, secrets, deploy key and config, vps site entry PR; idempotent re-runs. Missing:
 
-- **vps site entry** as a PR in `~/src/vps` instead of printed text, then wait for the switch.
+- **Wait for the switch** after the vps site entry PR: `just deploy-production` is by hand.
 - **DNS** records PR in vps `tofu/dns` from `--domain`. Registrar purchase is out of scope.
 - **Staging**: a `staging` branch and its own site entry and key when the site opts in.
 - **First deploy**, then print the URLs.
