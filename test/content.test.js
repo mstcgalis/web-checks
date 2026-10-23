@@ -32,6 +32,7 @@ test('push backs up, merges the whole tree, then hands it back to the tree owner
 	const r = content(setup(), 'push', 'staging');
 	expect(r.code).toBe(0);
 	const [backup, sync, chown] = r.log.trim().split('\n');
+	expect(backup).toContain("find '/srv/sites/x.cz/shared/content' -type l -print -quit");
 	expect(backup).toContain("tar czf ~/.wdk-content-backups/srv-sites-x.cz-shared-content-");
 	expect(backup).toContain("-C '/srv/sites/x.cz/shared' 'content'");
 	expect(backup).toContain('tail -n +6');
