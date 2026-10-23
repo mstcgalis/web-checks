@@ -2,8 +2,7 @@
 
 The end goal is one CLI that takes a website from first prompt to deployed (stack, repo, domain,
 VPS, CI) in minutes, built from scripts rather than around any one agent. This file lists only what
-is decided or known but **not built**; done work lives in git history and
-[`superpowers/specs`](superpowers/specs).
+is decided or known but **not built**; done work lives in git history.
 
 ```mermaid
 flowchart LR
