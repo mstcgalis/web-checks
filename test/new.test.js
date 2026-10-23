@@ -1,7 +1,9 @@
-import { expect, test } from 'bun:test';
+import { expect, setDefaultTimeout, test } from 'bun:test';
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
+setDefaultTimeout(30_000); // each test runs many git and gh processes; slow under the parallel suite
 
 const WDK = join(import.meta.dir, '..', 'bin', 'wdk.js');
 
