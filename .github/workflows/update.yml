@@ -1,5 +1,5 @@
 # Reusable: a project calls this on a schedule, with
-# `uses: mstcgalis/web-dev-kit/.github/workflows/update.yml@vX.Y.Z`. It runs `wdk update` (the
+# `uses: mstcgalis/web-dev-kit/.github/workflows/update.yml@SHA # vX.Y.Z`. It runs `wdk update` (the
 # latest release's workflow pins and flake.lock) and opens a PR if anything moved.
 name: update
 on:
@@ -22,7 +22,7 @@ jobs:
         with:
           token: ${{ secrets.NIX_ACCESS_TOKEN }}
       - uses: DeterminateSystems/determinate-nix-action@d0c908e6cbe9f89f36ed8205a3ab6f092636916a # v3
-      # Pinned to the commit of this very workflow file (the tag the caller named), never a moving
+      # Pinned to the commit of this very workflow file (the commit the caller pinned), never a moving
       # branch: this job holds a write-scoped token, so it runs only code that was reviewed and tagged.
       - run: nix shell "github:mstcgalis/web-dev-kit/${WORKFLOW_SHA}#wdk" -c wdk update
         env:

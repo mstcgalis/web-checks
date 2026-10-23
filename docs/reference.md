@@ -157,8 +157,8 @@ root ssh (the deploy key only releases); `wdk new` fills them for Kirby.
 
 ## Updates and tokens
 
-`wdk update` moves a project to the latest wdk release: workflow `@vX` pins, the flake tag, then
-`nix flake update wdk`. Nothing is committed. Each template ships `update.yml`, which runs it weekly and
+`wdk update` moves a project to the latest wdk release: workflow pins (`@SHA # vX.Y.Z`, a commit, so a
+moved tag can't change what runs with a deploy key), the flake tag, then `nix flake update wdk`. Nothing is committed. Each template ships `update.yml`, which runs it weekly and
 opens a PR.
 
 One fine-grained GitHub PAT, `NIX_ACCESS_TOKEN`, covers everything. Locally:

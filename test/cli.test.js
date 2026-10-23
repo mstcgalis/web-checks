@@ -114,18 +114,20 @@ test.concurrent('a justfile without serve-at says what to add', async () => {
 	expect(r.code).toBe(2);
 }, 30_000);
 
-test.concurrent('update re-pins the wdk workflows and a tag-pinned input, then updates the lock', async () => {
+test.concurrent('update pins the wdk workflows to the release commit (from a tag or an older commit) and a tag-pinned input, then updates the lock', async () => {
 	const dir = mkdtempSync(join(tmpdir(), 'wdk-update-'));
 	mkdirSync(join(dir, '.github', 'workflows'), { recursive: true });
 	const wf = (v) => `jobs:\n  a:\n    uses: mstcgalis/web-dev-kit/.github/workflows/check.yml@${v}\n  b:\n    uses: actions/checkout@v4\n`;
+	const sha = 'a'.repeat(40);
 	writeFileSync(join(dir, '.github', 'workflows', 'check.yml'), wf('v0.1.0'));
+	writeFileSync(join(dir, '.github', 'workflows', 'deploy.yml'), wf(`${'b'.repeat(40)} # v0.2.0`));
 	writeFileSync(join(dir, 'flake.nix'), '{ inputs.wdk.url = "github:mstcgalis/web-dev-kit/v0.1.0"; }');
 	const bin = mkdtempSync(join(tmpdir(), 'wdk-fakenix-'));
 	writeFileSync(join(bin, 'nix'), `#!/bin/sh\necho "$@" > ${dir}/nix-args\n`, { mode: 0o755 });
-	const r = await inDir(dir, ['update', '--tag', 'v9.9.9'], { PATH: `${bin}:${process.env.PATH}` });
+	const r = await inDir(dir, ['update', '--tag', 'v9.9.9', '--sha', sha], { PATH: `${bin}:${process.env.PATH}` });
 	expect(r.code).toBe(0);
 	expect(r.out).toContain('flake.nix -> v9.9.9');
-	expect(readFileSync(join(dir, '.github', 'workflows', 'check.yml'), 'utf8')).toBe(wf('v9.9.9'));
+	for (const f of ['check.yml', 'deploy.yml']) expect(readFileSync(join(dir, '.github', 'workflows', f), 'utf8')).toBe(wf(`${sha} # v9.9.9`));
 	expect(readFileSync(join(dir, 'flake.nix'), 'utf8')).toContain('web-dev-kit/v9.9.9"');
 	expect(readFileSync(join(dir, 'nix-args'), 'utf8').trim()).toBe('flake update wdk');
 });

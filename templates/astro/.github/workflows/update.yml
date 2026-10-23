@@ -6,6 +6,6 @@ on:
   workflow_dispatch:
 jobs:
   update:
-    uses: mstcgalis/web-dev-kit/.github/workflows/update.yml@v0.16.0
+    uses: mstcgalis/web-dev-kit/.github/workflows/update.yml@278ed50b3d94f78d521216bef1c791f8872f04e8 # v0.16.0
     secrets:
       NIX_ACCESS_TOKEN: ${{ secrets.NIX_ACCESS_TOKEN }}

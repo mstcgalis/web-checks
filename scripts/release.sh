@@ -19,8 +19,9 @@ git commit -qm "chore(release): $tag" -- package.json
 git fetch -q . web-kit:main # fast-forward only
 git tag "$tag" main
 git push -q origin main web-kit "$tag"
+sha=$(git rev-parse "$tag^{commit}")
 
-for t in templates/*/; do (cd "$t" && bun ../../bin/wdk.js update --tag "$tag" >/dev/null); done
+for t in templates/*/; do (cd "$t" && bun ../../bin/wdk.js update --tag "$tag" --sha "$sha" >/dev/null); done
 git add templates
 git commit -qm "chore(templates): lock wdk $tag"
 git fetch -q . web-kit:main
@@ -33,7 +34,7 @@ while read -r p; do
 	p=${p/#\~/$HOME}
 	[ -n "$p" ] || continue
 	if ! git -C "$p" diff --quiet HEAD -- "${pins[@]}"; then echo "! $p: pin files have uncommitted edits, skipped"; continue; fi
-	(cd "$p" && bun "$OLDPWD/bin/wdk.js" update --tag "$tag" >/dev/null)
+	(cd "$p" && bun "$OLDPWD/bin/wdk.js" update --tag "$tag" --sha "$sha" >/dev/null)
 	git -C "$p" add -- "${pins[@]}"
 	git -C "$p" commit -qm "chore(deps): wdk $tag" -- "${pins[@]}"
 	git -C "$p" push -q

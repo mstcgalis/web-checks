@@ -1,5 +1,6 @@
 # Reusable: a site calls this after pushing to main, with
-# `uses: mstcgalis/web-dev-kit/.github/workflows/deploy.yml@vX.Y.Z`. It runs `wdk deploy`: the built
+# `uses: mstcgalis/web-dev-kit/.github/workflows/deploy.yml@SHA # vX.Y.Z` (a commit, not a tag: a moved tag
+# would run new code with the deploy key). It runs `wdk deploy`: the built
 # site streams to the host's restricted deploy key (vps `site-release`), seconds, no vps CI involved.
 # `rollback: true` runs `wdk deploy rollback --if-current <this sha>` (a failed check after deploy).
 # Needs `deploy.host` in wdk.config.js. With no DEPLOY_SSH_KEY secret it skips with a notice (a new repo

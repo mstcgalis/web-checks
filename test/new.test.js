@@ -65,7 +65,7 @@ test('new: template pinned to this wdk, committed, on GitHub, secrets set, deplo
 	expect(r.err).toBe('');
 	expect(r.code).toBe(0);
 	const { version } = JSON.parse(readFileSync(join(import.meta.dir, '..', 'package.json'), 'utf8'));
-	expect(readFileSync(join(dir, '.github/workflows/deploy.yml'), 'utf8')).toContain(`deploy.yml@v${version}`);
+	expect(readFileSync(join(dir, '.github/workflows/deploy.yml'), 'utf8')).toMatch(new RegExp(`deploy\\.yml@[0-9a-f]{40} # v${version}\n`));
 	expect(readFileSync(join(dir, 'wdk.config.js'), 'utf8')).toContain("deploy: { host: 'example-com-deploy@vps.test', dir: 'site' }");
 	expect(log(dir)).toEqual(['chore: deploy to example-com-deploy@vps.test', 'chore: start from the wdk static template']);
 	expect(readFileSync(join(root, 'gh.log'), 'utf8')).toContain('repo create site --private');
@@ -189,7 +189,8 @@ test('new --staging: staging.<domain> from a staging branch, its own key and vps
 	expect(r.out).toContain('push: staging');
 	const wf = readFileSync(join(dir, '.github/workflows/deploy-staging.yml'), 'utf8');
 	const { version } = JSON.parse(readFileSync(join(import.meta.dir, '..', 'package.json'), 'utf8'));
-	expect(wf).toContain(`deploy.yml@v${version}\n    with:\n      host: stg-example-com-deploy@vps.test\n      url: https://staging.example.com/`);
+	expect(wf).toMatch(/deploy\.yml@[0-9a-f]{40} # v/);
+	expect(wf).toContain(`# v${version}\n    with:\n      host: stg-example-com-deploy@vps.test\n      url: https://staging.example.com/`);
 	expect(wf).toContain('DEPLOY_SSH_KEY: ${{ secrets.STAGING_DEPLOY_SSH_KEY }}');
 	expect(log(dir)[0]).toBe('chore: deploy staging to stg-example-com-deploy@vps.test');
 	expect(g(join(root, 'remote.git'), 'rev-parse', 'staging')).toBe(g(dir, 'rev-parse', 'HEAD'));

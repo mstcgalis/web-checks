@@ -6,11 +6,11 @@ on:
     branches: [main]
 jobs:
   check:
-    uses: mstcgalis/web-dev-kit/.github/workflows/check.yml@v0.16.0
+    uses: mstcgalis/web-dev-kit/.github/workflows/check.yml@278ed50b3d94f78d521216bef1c791f8872f04e8 # v0.16.0
     secrets:
       NIX_ACCESS_TOKEN: ${{ secrets.NIX_ACCESS_TOKEN }}
   deploy:
-    uses: mstcgalis/web-dev-kit/.github/workflows/deploy.yml@v0.16.0
+    uses: mstcgalis/web-dev-kit/.github/workflows/deploy.yml@278ed50b3d94f78d521216bef1c791f8872f04e8 # v0.16.0
     secrets:
       DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
       DEPLOY_HOST_KEY: ${{ secrets.DEPLOY_HOST_KEY }}
@@ -18,7 +18,7 @@ jobs:
   rollback:
     needs: [check, deploy]
     if: failure() && needs.deploy.result == 'success' && needs.check.result == 'failure'
-    uses: mstcgalis/web-dev-kit/.github/workflows/deploy.yml@v0.16.0
+    uses: mstcgalis/web-dev-kit/.github/workflows/deploy.yml@278ed50b3d94f78d521216bef1c791f8872f04e8 # v0.16.0
     with:
       rollback: true
     secrets:
