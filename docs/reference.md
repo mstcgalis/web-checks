@@ -122,7 +122,9 @@ staging to an existing project. The private keys exist only in the secrets.
 
 Each run ends with every site's state: `live: URL`, or `not live yet` until the vps entry is switched in. The
 first deploy fails before that (no deploy user yet); re-run `wdk new` after the switch and it re-runs the failed
-deploy, seeing the vps seed page.
+deploy, seeing the vps seed page. `--wait` does that in one run: it polls each site (up to 30 min) until the
+switch, then re-runs the deploy. Run bare at a terminal, `wdk new` asks for the stack, dir, domain and vps;
+without a terminal (an agent) it prints the usage instead.
 
 By hand: `wdk deploy` (`--no-build`, `--build-only`, `--host`), `wdk deploy rollback`, `wdk deploy list`.
 

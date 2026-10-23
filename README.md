@@ -112,7 +112,7 @@ All options, engines, the proxy and perf knobs: [`docs/reference.md`](docs/refer
 
 - [`docs/reference.md`](docs/reference.md): config, engines, project wiring, deploys, content, updates, tokens
 - [`docs/perf.md`](docs/perf.md): the ten measurement traps
-- [`docs/roadmap.md`](docs/roadmap.md): what is not built yet (bootstrap CLI, DNS)
+- [`docs/roadmap.md`](docs/roadmap.md): what is not built yet (linters, shared contracts, deferred checks)
 - [`AGENTS.md`](AGENTS.md): rules for contributors and agents, and how wdk is released
 
 Develop: `nix develop`, `bun install`, `just check` before every commit. Licence: AGPL-3.0.

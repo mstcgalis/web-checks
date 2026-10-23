@@ -8,17 +8,8 @@ is decided or known but **not built**; done work lives in git history and
 ```mermaid
 flowchart LR
   checks["checks<br/>built"] --> stacks["stack templates<br/>built"] --> deploy["release deploys<br/>built"]
-  deploy --> new["wdk new<br/>repo, secrets, key"] --> vps["vps: secrets, content sync<br/>built"]
+  deploy --> new["wdk new<br/>built"] --> vps["vps: secrets, content sync<br/>built"]
 ```
-
-The CLI comes last: it only orchestrates modules that already exist.
-
-## Bootstrap CLI: the rest of `wdk new`
-
-Built: template, git, GitHub repo, secrets, deploy key and config, vps site entry and DNS PR, `--staging`, first deploy on a re-run after the switch, the URLs; idempotent re-runs. Missing:
-
-- **Wait for the switch** after the vps site entry PR: `just deploy-production` is by hand.
-- **Prompts** as a thin layer over the flags, if agents are not the only users.
 
 ## Stacks and conventions
 
