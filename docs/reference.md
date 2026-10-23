@@ -130,6 +130,11 @@ By hand: `wdk deploy` (`--no-build`, `--build-only`, `--host`), `wdk deploy roll
 `.gitattributes` export-ignores the rest), a `css()`/`js()` content-hash `?v=` plugin, and the deploy
 caller.
 
+The Kirby license is state too: activated in the Panel, it lands in `shared/license`. Credentials (mail and
+the like) are vps sops secrets: `secrets = [ "smtp_password" ];` in the site entry reads `<slug>: smtp_password`
+from vps `secrets.yaml` (set it first; a missing key fails the switch), and PHP reads
+`trim(file_get_contents(getenv('KIRBY_SECRETS') . '/smtp_password'))`.
+
 ## Updates and tokens
 
 `wdk update` moves a project to the latest wdk release: workflow `@vX` pins, the flake tag, then

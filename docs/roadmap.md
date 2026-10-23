@@ -22,7 +22,8 @@ Built: template, git, GitHub repo, secrets, deploy key and config, vps site entr
 
 ## vps (in `~/src/vps`)
 
-- **Secrets** through sops per site entry (Kirby license, mail credentials).
+- **Secrets** per site entry: built on vps branch `site-secrets` (`services.sites.<d>.secrets`), not merged.
+  The Kirby license needs none: it is `shared/license`.
 - **Content sync** (sonda's `content.just`, `docs/server-contract.md`) generalised for stateful
   stacks: pull-first, dry-run, path-scoped push, merge-only.
 
