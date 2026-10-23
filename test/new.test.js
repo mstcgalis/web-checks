@@ -36,9 +36,10 @@ esac
 	for (const f of ['gh', 'ssh-keyscan']) chmodSync(join(bin, f), 0o755);
 	return root;
 }
-function wdkNew(root, args, env = {}) {
+function wdkNew(root, args, env = {}, input) {
 	const r = Bun.spawnSync(['bun', WDK, 'new', ...args], {
 		cwd: root,
+		stdin: input === undefined ? 'ignore' : Buffer.from(input),
 		env: { ...process.env, PATH: `${join(root, 'bin')}:${process.env.PATH}`, HOME: root, NIX_ACCESS_TOKEN: '', WDK_VPS_REPO: '', WDK_NEW_ORIGIN: 'http://127.0.0.1:9', GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@t', ...env },
 	});
 	return { code: r.exitCode, out: r.stdout.toString(), err: r.stderr.toString() };
@@ -224,6 +225,31 @@ test('new after the vps switch: a site on the seed page gets its failed deploy r
 		expect(r.out).toContain('live: https://staging.example.com/');
 		expect(readFileSync(join(root, 'gh.log'), 'utf8')).toContain('run rerun 41 --failed');
 		expect(wdkNew(setup(), ['kirby', 'k', '--domain', 'k.sk', '--vps', 'vps.test'], env).out).toContain('deploy: re-ran deploy.yml');
+	} finally {
+		srv.kill();
+	}
+});
+
+test('new run bare at a terminal asks for the stack, dir and domain; without one it prints the usage', () => {
+	const root = setup();
+	const r = wdkNew(root, ['--no-github'], { WDK_NEW_PROMPT: '1' }, 'static\nasked\n\n');
+	expect(r.err).toBe('');
+	expect(log(join(root, 'asked'))).toEqual(['chore: start from the wdk static template']);
+	const bare = wdkNew(root, []);
+	expect([bare.code, bare.err]).toEqual([2, expect.stringContaining('usage: wdk new')]);
+});
+
+test('new --wait polls until the vps entry is switched in, then re-runs the failed deploy', async () => {
+	const root = setup();
+	// Two 502s (the vps entry not live yet), then the seed page.
+	const port = 40000 + Math.floor(Math.random() * 20000);
+	const srv = Bun.spawn(['bun', '-e', `let n = 0; Bun.serve({ port: ${port}, fetch: () => ++n > 2 ? new Response('deploying\\n') : new Response('', { status: 502 }) }); console.log('up')`], { stdout: 'pipe' });
+	try {
+		await srv.stdout.getReader().read();
+		const r = wdkNew(root, ['static', 'site', '--domain', 'example.com', '--vps', 'vps.test', '--wait'], { WDK_NEW_ORIGIN: `http://127.0.0.1:${port}`, WDK_NEW_WAIT_MS: '20' });
+		expect(r.err).toBe('');
+		expect(r.out.match(/waiting: https:\/\/example\.com\//g)).toHaveLength(1);
+		expect(r.out).toContain('deploy: re-ran deploy.yml');
 	} finally {
 		srv.kill();
 	}
