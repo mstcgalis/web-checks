@@ -9,6 +9,7 @@ cd "$(dirname "$0")/.."
 [ "$(git branch --show-current)" = web-kit ] || { echo "release from web-kit"; exit 1; }
 git diff --quiet HEAD || { echo "commit or stash first"; exit 1; }
 git rev-parse -q --verify "refs/tags/$tag" >/dev/null && { echo "$tag exists"; exit 1; }
+command -v nix >/dev/null || { echo "nix not on PATH (wdk update needs it): run from the dev shell"; exit 1; }
 
 log=$(mktemp)
 bun test --parallel >"$log" 2>&1 || { tail -40 "$log"; echo "tests failed, nothing released"; exit 1; }
