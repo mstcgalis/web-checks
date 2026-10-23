@@ -140,6 +140,7 @@ test('new with a vps repo: the site entry is a PR from a worktree, the user tree
 	const r = wdkNew(root, ['kirby', 'site', '--domain', 'k.example.com', '--vps', 'vps.test']);
 	expect(r.err).toBe('');
 	expect(r.out).toContain('vps: https://github.com/me/vps/pull/1');
+	expect(readFileSync(join(root, 'site', 'wdk.config.js'), 'utf8')).toContain("content: { targets: { production: 'root@vps.test:/srv/sites/k.example.com/shared/content' } }");
 	expect(readFileSync(join(root, 'gh.log'), 'utf8')).toContain('pr create --fill --head site/k-example-com');
 	expect(g(bare, 'log', '--format=%s', 'site/k-example-com')).toBe('feat(sites): k.example.com, from wdk new\ninit');
 	expect(g(bare, 'show', 'site/k-example-com:nix/hosts/production/default.nix')).toContain('../../modules/site.nix\n    ../../modules/k-example-com.nix\n  ];');
