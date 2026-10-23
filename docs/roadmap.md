@@ -8,7 +8,7 @@ is decided or known but **not built**; done work lives in git history and
 ```mermaid
 flowchart LR
   checks["checks<br/>built"] --> stacks["stack templates<br/>built"] --> deploy["release deploys<br/>built"]
-  deploy --> new["wdk new<br/>repo, secrets, key"] --> vps["vps: secrets<br/>open"]
+  deploy --> new["wdk new<br/>repo, secrets, key"] --> vps["vps: secrets, content sync<br/>built"]
 ```
 
 The CLI comes last: it only orchestrates modules that already exist.
@@ -19,11 +19,6 @@ Built: template, git, GitHub repo, secrets, deploy key and config, vps site entr
 
 - **Wait for the switch** after the vps site entry PR: `just deploy-production` is by hand.
 - **Prompts** as a thin layer over the flags, if agents are not the only users.
-
-## vps (in `~/src/vps`)
-
-- **Secrets** per site entry: built on vps branch `site-secrets` (`services.sites.<d>.secrets`), not merged.
-  The Kirby license needs none: it is `shared/license`.
 
 ## Stacks and conventions
 
