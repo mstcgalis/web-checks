@@ -90,6 +90,7 @@ Run `wdk` for the list; `--engines a,b` and `--skip REGEX` override the config.
 | `wdk doctor` | what is missing, one line each, with the fix |
 | `wdk install-browsers` | only the browsers your engines need (macOS) |
 | `wdk deploy` | build and ship a release to the host in seconds; `rollback`, `list` ([how](docs/reference.md#deploys)) |
+| `wdk content` | pull and push a Kirby site's Panel content, merge-only, backed up ([how](docs/reference.md#content)) |
 | `wdk update` | move the project to the latest wdk release (workflow pins, `flake.lock`) |
 | `wdk serve-dir DIR PORT` | static server for a `serve-at` recipe |
 
@@ -109,9 +110,9 @@ All options, engines, the proxy and perf knobs: [`docs/reference.md`](docs/refer
 
 ## More
 
-- [`docs/reference.md`](docs/reference.md): config, engines, project wiring, deploys, updates, tokens
+- [`docs/reference.md`](docs/reference.md): config, engines, project wiring, deploys, content, updates, tokens
 - [`docs/perf.md`](docs/perf.md): the ten measurement traps
-- [`docs/roadmap.md`](docs/roadmap.md): what is not built yet (bootstrap CLI, content sync, DNS)
+- [`docs/roadmap.md`](docs/roadmap.md): what is not built yet (bootstrap CLI, DNS)
 - [`AGENTS.md`](AGENTS.md): rules for contributors and agents, and how wdk is released
 
 Develop: `nix develop`, `bun install`, `just check` before every commit. Licence: AGPL-3.0.

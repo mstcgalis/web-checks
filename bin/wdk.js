@@ -18,13 +18,14 @@ setup
   doctor             what is missing, and the command that fixes it
   update [--tag vX]  move the project to the latest wdk release (workflow pins and flake.lock)
   deploy [rollback|list]  stream the build to the host's restricted key; rollback, list
+  content pull|push T [PATH..]  merge server-owned content/ with a target (--dry; production push needs --yes)
   install-browsers   the browsers your engines need (macOS; Linux: the dev shell)
   serve-dir DIR PORT static server for a justfile's serve-at
 
 --engines a,b overrides the config's engines; --skip REGEX leaves pages out of the crawl.
 Config: wdk.config.js. Details: https://github.com/mstcgalis/web-dev-kit#readme`;
 
-const COMMANDS = ['new', 'check', 'a11y', 'compat', 'smoke', 'shots', 'perf', 'load', 'doctor', 'update', 'deploy', 'serve-dir', 'install-browsers'];
+const COMMANDS = ['new', 'check', 'a11y', 'compat', 'smoke', 'shots', 'perf', 'load', 'doctor', 'update', 'deploy', 'content', 'serve-dir', 'install-browsers'];
 const [cmd, ...args] = process.argv.slice(2);
 if (!cmd || ['help', '-h', '--help'].includes(cmd) || args.includes('--help') || args.includes('-h')) {
 	console.log(HELP);

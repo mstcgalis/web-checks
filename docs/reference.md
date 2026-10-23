@@ -29,6 +29,7 @@ export default {
   proxy: { block: ['panel', 'api', '*.php'] },
   perf: { page: '/', knobs: { zoom: { css: '…', probe: '.slide img' }, seismo: { script: 'seismograph' } } },
   deploy: { host: 'SITE-deploy@HOST', dir: 'dist', build: 'just build' },
+  content: { dir: 'content', targets: { production: 'root@HOST:/srv/sites/D/shared/content' } },
 };
 ```
 
@@ -41,6 +42,7 @@ export default {
 | `proxy.block` | paths the proxy refuses |
 | `perf` | the page to measure and the knobs (CSS or script variants) to compare; traps: [`perf.md`](perf.md) |
 | `deploy` | `host` (restricted user), `dir` (what ships), `build` (run first) |
+| `content` | `dir` (local copy), `targets` (name → `user@host:/path`) for `wdk content` |
 
 ## Browsers and the proxy
 
@@ -134,6 +136,22 @@ The Kirby license is state too: activated in the Panel, it lands in `shared/lice
 the like) are vps sops secrets: `secrets = [ "smtp_password" ];` in the site entry reads `<slug>: smtp_password`
 from vps `secrets.yaml` (set it first; a missing key fails the switch), and PHP reads
 `trim(file_get_contents(getenv('KIRBY_SECRETS') . '/smtp_password'))`.
+
+## Content
+
+A Kirby site's `content/` belongs to the server: the Panel writes it, git and releases never carry it.
+`wdk content` moves it over rsync, merge-only: the newer file wins on either side and nothing is deleted.
+
+| Command | Does |
+|---|---|
+| `wdk content pull T` | server into local `content/` (delete it first for an exact mirror) |
+| `wdk content push T [PATH...]` | local into the server: the whole tree, or page paths relative to `content/` |
+| `--dry` | prints what would move, changes nothing |
+
+Pull first, then push only what you changed: `wdk content push staging artists/vesna --dry`. Each push first
+takes a tar backup on the host (`~/.wdk-content-backups`, last 5 per target), then `chown`s the tree back to its
+owner (the PHP-FPM pool) so the Panel can edit the pushed files. A push to `production` needs `--yes`. Targets use
+root ssh (the deploy key only releases); `wdk new` fills them for Kirby.
 
 ## Updates and tokens
 

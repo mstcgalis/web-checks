@@ -8,7 +8,7 @@ is decided or known but **not built**; done work lives in git history and
 ```mermaid
 flowchart LR
   checks["checks<br/>built"] --> stacks["stack templates<br/>built"] --> deploy["release deploys<br/>built"]
-  deploy --> new["wdk new<br/>repo, secrets, key"] --> vps["vps: secrets, content sync<br/>open"]
+  deploy --> new["wdk new<br/>repo, secrets, key"] --> vps["vps: secrets<br/>open"]
 ```
 
 The CLI comes last: it only orchestrates modules that already exist.
@@ -24,8 +24,6 @@ Built: template, git, GitHub repo, secrets, deploy key and config, vps site entr
 
 - **Secrets** per site entry: built on vps branch `site-secrets` (`services.sites.<d>.secrets`), not merged.
   The Kirby license needs none: it is `shared/license`.
-- **Content sync** (sonda's `content.just`, `docs/server-contract.md`) generalised for stateful
-  stacks: pull-first, dry-run, path-scoped push, merge-only.
 
 ## Stacks and conventions
 
