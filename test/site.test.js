@@ -43,6 +43,19 @@ test('loadConfig fills defaults under the project file', async () => {
 	expect((await loadConfig(tmpdir())).engines.local).toEqual(['chromium']);
 });
 
+// Runs fn with stderr captured, so a failing server's replayed output stays out of the test log.
+async function quietly(fn) {
+	const write = process.stderr.write;
+	let err = '';
+	process.stderr.write = (d) => ((err += d), true);
+	try {
+		await fn();
+	} finally {
+		process.stderr.write = write;
+	}
+	return err;
+}
+
 test('startSite fails fast and names the recipe when serve-at dies', async () => {
 	const dir = mkdtempSync(join(tmpdir(), 'wdk-noserve-'));
 	writeFileSync(join(dir, 'justfile'), 'serve-at PORT:\n    exit 1\n');
@@ -50,7 +63,8 @@ test('startSite fails fast and names the recipe when serve-at dies', async () =>
 	process.chdir(dir);
 	try {
 		const t = Date.now();
-		await expect(startSite()).rejects.toThrow(/just serve-at \d+/);
+		const err = await quietly(() => expect(startSite()).rejects.toThrow(/just serve-at \d+/));
+		expect(err).toContain('serve-at');
 		expect(Date.now() - t).toBeLessThan(11_000);
 	} finally {
 		process.chdir(cwd);
@@ -64,7 +78,7 @@ test('startSite does not take a port thief for the site', async () => {
 	const cwd = process.cwd();
 	process.chdir(dir);
 	try {
-		await expect(startSite()).rejects.toThrow(/exited/);
+		await quietly(() => expect(startSite()).rejects.toThrow(/exited/));
 	} finally {
 		process.chdir(cwd);
 	}
@@ -76,7 +90,7 @@ slow('startSite gives up on a server that accepts but never answers', async () =
 	const cwd = process.cwd();
 	process.chdir(dir);
 	try {
-		await expect(startSite()).rejects.toThrow(/never answered/);
+		await quietly(() => expect(startSite()).rejects.toThrow(/never answered/));
 	} finally {
 		process.chdir(cwd);
 	}
